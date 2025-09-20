@@ -1,7 +1,6 @@
 module myapp::content_gate_ticket {
     use std::hash;
     use std::vector;
-    use sui::clock;
     use sui::object;
     use sui::tx_context;
     use sui::tx_context::TxContext;
@@ -27,7 +26,6 @@ module myapp::content_gate_ticket {
     struct Policy has key {
         id: object::UID,
         admin: address,
-        open_after_ms: u64,
     }
 
     /// Create a policy and mint one ticket with hashed email set.
@@ -41,7 +39,6 @@ module myapp::content_gate_ticket {
         let policy = Policy {
             id: object::new(ctx),
             admin,
-            open_after_ms: 0,
         };
         let policy_id = object::id(&policy);
         transfer::share_object(policy);
@@ -74,12 +71,6 @@ module myapp::content_gate_ticket {
     }
 
 
-    /// Admin can adjust the optional time lock (0 disables the gate).
-    public fun set_open_after_ms(p: &mut Policy, caller: address, t: u64) {
-        assert_admin(p, caller);
-        p.open_after_ms = t;
-    }
-
     /// Anyone holding a ticket tied to the policy can transfer it manually or via zkSend links.
     #[allow(lint(custom_state_change))]
     public fun transfer_ticket(t: Ticket, to: address) {
@@ -99,12 +90,8 @@ module myapp::content_gate_ticket {
         id: vector<u8>,
         p: &Policy,
         t: &Ticket,
-        clk: &clock::Clock,
         email_input: vector<u8>
     ) {
-        if (p.open_after_ms > 0) {
-            assert!(clock::timestamp_ms(clk) >= p.open_after_ms, ENoAccess);
-        };
         let same_policy = t.policy_id == object::id(p);
         assert!(same_policy, EBadTicket);
 
