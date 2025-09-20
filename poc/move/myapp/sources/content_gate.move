@@ -1,6 +1,7 @@
 module myapp::content_gate_ticket {
     use std::hash;
     use std::vector;
+    use sui::object;
     use sui::tx_context;
     use sui::tx_context::TxContext;
     use sui::transfer;
@@ -18,7 +19,6 @@ module myapp::content_gate_ticket {
         id: object::UID,
         policy_id: object::ID,
         hashed_receiver_email: vector<u8>,
-        email_hash_initialized: bool,
     }
 
     /// Shared policy binding the Seal approval rules to every minted ticket.
@@ -39,6 +39,7 @@ module myapp::content_gate_ticket {
             admin,
         };
         let policy_id = object::id(&policy);
+        transfer::share_object(policy);
 
         let ticket_id = mint_ticket(policy_id, hashed_email, ctx);
         (policy_id, ticket_id)
@@ -59,7 +60,6 @@ module myapp::content_gate_ticket {
             id: object::new(ctx),
             policy_id,
             hashed_receiver_email: hashed_email,
-            email_hash_initialized: true,
         };
         let ticket_id = object::id(&ticket);
         let sender = tx_context::sender(ctx);
@@ -67,12 +67,10 @@ module myapp::content_gate_ticket {
         ticket_id
     }
 
-
     /// Anyone holding a ticket tied to the policy can transfer it manually or via zkSend links.
     #[allow(lint(custom_state_change))]
     public fun transfer_ticket(t: Ticket, to: address) {
-        ticket.hashed_receiver_email = hash::sha3_256(email);
-        ticket.email_hash_initialized = true;
+        transfer::transfer(t, to);
     }
 
     /// Seal verification hook. The dry-run call confirms the ticket matches the policy
@@ -80,18 +78,21 @@ module myapp::content_gate_ticket {
     public fun seal_approve_with_ticket(
         id: vector<u8>,
         p: &Policy,
-        ticket.hashed_receiver_email = hash::sha3_256(email);
+        t: &Ticket,
         email_input: vector<u8>
     ) {
         let same_policy = t.policy_id == object::id(p);
         assert!(same_policy, EBadTicket);
 
-        assert!(t.email_hash_initialized, EEmailHashNotSet);
         let expected = &t.hashed_receiver_email;
-        let provided = hash::sha3_256(email_input);
+        let provided = hash::sha2_256(email_input);
         let matches = bytes_equal(expected, &provided);
+        assert!(matches, EEmailHashMismatch);
 
         let _ = id;
+    }
+
+    fun bytes_equal(a: &vector<u8>, b: &vector<u8>): bool {
         if (vector::length(a) != vector::length(b)) {
             return false
         };
