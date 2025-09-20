@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import type { Response } from 'express';
 import { normalizeSuiAddress } from '@mysten/sui/utils';
 import { z } from 'zod';
 import { config } from '../config.js';
@@ -19,7 +20,8 @@ const signatureSchema = z.object({
   signature: z.string(),
 });
 
-router.post('/transaction-blocks/sponsor', requireSession, async (req: AuthenticatedRequest, res) => {
+router.post('/transaction-blocks/sponsor', requireSession, async (req, res) => {
+  const { session } = req as AuthenticatedRequest;
   const parse = sponsorBodySchema.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: parse.error.message });
@@ -31,7 +33,7 @@ router.post('/transaction-blocks/sponsor', requireSession, async (req: Authentic
   }
 
   const claimer = normalizeSuiAddress(body.claimer);
-  if (claimer !== normalizeSuiAddress(req.session.address)) {
+  if (claimer !== normalizeSuiAddress(session.address)) {
     return res.status(403).json({ error: 'Claimer address does not match authenticated session' });
   }
 
@@ -56,7 +58,8 @@ router.post('/transaction-blocks/sponsor', requireSession, async (req: Authentic
   }
 });
 
-router.post('/transaction-blocks/sponsor/:digest', requireSession, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/transaction-blocks/sponsor/:digest', requireSession, async (req, res: Response) => {
+  const { session } = req as AuthenticatedRequest;
   const parse = signatureSchema.safeParse(req.body);
   if (!parse.success) {
     return res.status(400).json({ error: parse.error.message });
@@ -64,13 +67,14 @@ router.post('/transaction-blocks/sponsor/:digest', requireSession, async (req: A
 
   console.info('[sponsor] execute request', {
     digest: req.params.digest,
-    claimer: req.session.address,
-    signatureSnippet: typeof parse.data.signature === 'string' ? `${parse.data.signature.slice(0, 16)}...` : null,
+    claimer: session.address,
+    signatureSnippet:
+      typeof parse.data.signature === 'string' ? `${parse.data.signature.slice(0, 16)}...` : null,
   });
 
   console.info('[sponsor] execute request', {
     digest: req.params.digest,
-    claimer: req.session.address,
+    claimer: session.address,
     signatureLength: typeof parse.data.signature === 'string' ? parse.data.signature.length : null,
   });
 
@@ -79,7 +83,7 @@ router.post('/transaction-blocks/sponsor/:digest', requireSession, async (req: A
     return res.status(404).json({ error: 'Sponsored transaction not found' });
   }
 
-  const claimer = normalizeSuiAddress(req.session.address);
+  const claimer = normalizeSuiAddress(session.address);
   if (pending.claimer !== claimer) {
     return res.status(403).json({ error: 'Session does not match sponsored transaction claimer' });
   }

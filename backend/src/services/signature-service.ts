@@ -5,16 +5,14 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import { getZkLoginSignature } from '@mysten/sui/zklogin'
 import type { StoredSession } from '../utils/session-store.js'
 
-const TRANSACTION_INTENT_SCOPE = 'TransactionData'
-
-function messageWithIntent(scope: string, message: Uint8Array) {
+function messageWithIntent(message: Uint8Array) {
   return bcs
     .IntentMessage(bcs.fixedArray(message.length, bcs.u8()))
     .serialize({
       intent: {
-        scope: { [scope]: true },
-        version: { V0: true },
-        appId: { Sui: true },
+        scope: { TransactionData: true } as const,
+        version: { V0: true } as const,
+        appId: { Sui: true } as const,
       },
       value: message,
     })
@@ -29,7 +27,7 @@ export async function createZkLoginSignatureForTransaction(
     throw new Error('ZkLogin proof is missing from session')
   }
   const transactionBytes = fromBase64(transactionBlockBase64)
-  const intentMessage = messageWithIntent(TRANSACTION_INTENT_SCOPE, transactionBytes)
+  const intentMessage = messageWithIntent(transactionBytes)
   const digest = blake2b(intentMessage, { dkLen: 32 })
   const ephemeralKeypair = Ed25519Keypair.fromSecretKey(fromBase64(session.ephemeralKeyPair))
   const userSignatureBytes = await ephemeralKeypair.sign(digest)

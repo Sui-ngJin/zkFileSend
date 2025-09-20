@@ -1,5 +1,7 @@
 import { randomUUID } from 'crypto';
-import type { CreateZkLoginZkpApiResponse } from '@mysten/enoki/dist/esm/EnokiClient/type';
+import type { EnokiClient } from '@mysten/enoki';
+
+type ZkLoginProof = Awaited<ReturnType<EnokiClient['createZkLoginZkp']>>;
 
 export type StoredSession = {
   address: string;
@@ -7,7 +9,7 @@ export type StoredSession = {
   randomness: string;
   maxEpoch: number;
   ephemeralKeyPair: string;
-  proof?: CreateZkLoginZkpApiResponse;
+  proof?: ZkLoginProof;
   expiresAt: number;
 };
 

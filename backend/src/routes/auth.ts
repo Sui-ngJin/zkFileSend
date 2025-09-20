@@ -109,14 +109,15 @@ router.get('/session', (req: Request, res: Response) => {
   res.json({ address: session.address, expiresAt: session.expiresAt });
 });
 
-router.post('/sign', requireSession, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/sign', requireSession, async (req: Request, res: Response) => {
+  const { session } = req as AuthenticatedRequest;
   const transactionBlock = req.body?.transactionBlock;
   if (!transactionBlock || typeof transactionBlock !== 'string') {
     return res.status(400).json({ error: 'transactionBlock must be a base64 string' });
   }
 
   try {
-    const signature = await createZkLoginSignatureForTransaction(req.session, transactionBlock);
+    const signature = await createZkLoginSignatureForTransaction(session, transactionBlock);
     res.json({ signature });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to sign transaction';

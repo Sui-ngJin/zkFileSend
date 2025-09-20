@@ -1,16 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
-import { sessionStore } from '../utils/session-store.js';
+import { sessionStore, type StoredSession } from '../utils/session-store.js';
 
 export type AuthenticatedRequest = Request & {
   sessionId: string;
-  session: {
-    address: string;
-    jwt: string;
-    randomness: string;
-    maxEpoch: number;
-    ephemeralKeyPair: string;
-    proof?: unknown;
-  };
+  session: StoredSession;
 };
 
 export function requireSession(req: Request, res: Response, next: NextFunction) {
