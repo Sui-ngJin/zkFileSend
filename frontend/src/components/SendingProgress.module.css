@@ -1,0 +1,261 @@
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:ital,wght@0,500;0,600;0,700&display=swap');
+
+.sendingProgressContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+  font-size: 14px;
+  color: #636161;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.stepsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-weight: 500;
+  color: #636161;
+}
+
+.stepsWrapper {
+  border-radius: 6px;
+  background-color: #fff;
+  border: 1px solid #f1f1f1;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0px;
+  color: #b6b6b6;
+}
+
+.stepRow {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0px;
+  z-index: 6;
+}
+
+.stepInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepText {
+  position: relative;
+  font-weight: 500;
+  color: #636161;
+}
+
+.stepCost {
+  position: relative;
+  font-weight: 500;
+  color: #b6b6b6;
+}
+
+/* 연결선 컨테이너 구조 */
+.connectorContainer {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  z-index: 5;
+  margin-top: -1px;
+  position: relative;
+  height: 21px;
+}
+
+.connectorWrapper {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0px 7.5px;
+}
+
+.connectorLine {
+  align-self: stretch;
+  width: 2px;
+  position: relative;
+  background-color: #f1f1f1;
+  height: 21px;
+}
+
+.completedConnector {
+  background-color: #02bbff;
+}
+
+.connectorSpacer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 21px;
+}
+
+.connectorSpacerLine {
+  align-self: stretch;
+  position: relative;
+  background-color: #f1f1f1;
+  height: 1px;
+  margin: 10px 0px 10px 8px;
+}
+
+/* Step Icons */
+.checkIcon {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background-color: #02bbff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 2;
+  position: relative;
+}
+
+.spinner {
+  width: 17px;
+  height: 17px;
+  position: relative;
+  z-index: 2;
+}
+
+/* 9번 요소 - 파란색 배경 원 */
+.spinner::before {
+  content: '';
+  width: 100%;
+  position: relative;
+  border-radius: 50%;
+  background-color: #02bbff;
+  height: 17px;
+  display: block;
+}
+
+/* SVG 스피너 */
+.spinnerSvg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 11px;
+  height: 11px;
+  animation: spinElement 1s linear infinite;
+}
+
+@keyframes spinElement {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.pendingIcon {
+  width: 17px;
+  height: 17px;
+  border: 2px solid #d1d1d1;
+  border-radius: 50%;
+  background-color: transparent;
+  z-index: 2;
+  position: relative;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Step Status Colors */
+.stepRow:has(.checkIcon) .stepText {
+  color: #02bbff;
+}
+
+.stepRow:has(.spinner) .stepText {
+  color: #02bbff;
+}
+
+.stepRow:has(.checkIcon) .stepCost {
+  color: #b6b6b6;
+}
+
+.stepRow:has(.spinner) .stepCost {
+  color: #b6b6b6;
+}
+
+.totalCost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+}
+
+.totalLabel {
+  font-weight: 500;
+  color: #636161;
+}
+
+.totalAmount {
+  line-height: 135%;
+  font-weight: 500;
+  color: #221d1d;
+  opacity: 0.8;
+}
+
+.actionSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.signButton {
+  width: 100%;
+  border-radius: 6px;
+  background-color: #221d1d;
+  color: #fff;
+  border: none;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.signButton:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.signButton.signing {
+  background-color: #02bbff;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.signButton.signing .signing {
+  opacity: 0.66;
+}
+
+.disclaimer {
+  font-size: 14px;
+  font-weight: 500;
+  color: #b6b6b6;
+  text-align: center;
+  line-height: 125%;
+}

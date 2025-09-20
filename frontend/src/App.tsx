@@ -51,6 +51,7 @@ function App() {
   const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null)
   const [currentTab, setCurrentTab] = useState<'send' | 'download'>('send')
   const [showFileSent, setShowFileSent] = useState(false)
+  const [signingStep, setSigningStep] = useState(0)
 
   // Decrypt functionality states
   const [blobIdInput, setBlobIdInput] = useState('')
@@ -69,6 +70,7 @@ function App() {
     setUploadResult(null)
     setAlertMessage(null)
     setShowFileSent(false)
+    setSigningStep(0)
   }
 
   const clearEmailInput = () => {
@@ -88,14 +90,33 @@ function App() {
 
     setIsUploading(true)
     setAlertMessage(null)
+
     try {
       console.log('Starting encryption and upload...')
+
+      // Step 1: Set access policy
+      setSigningStep(1)
+      await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate delay
+
+      // Step 2: Reserve storage space
+      setSigningStep(2)
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Step 3: Encrypt, upload, and send the file
+      setSigningStep(3)
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Step 4: Set the download link
+      setSigningStep(4)
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
       const result = await sealService.encryptAndUploadWithWallet(
         selectedFile,
         currentAccount.address,
         signAndExecuteTransaction
       )
 
+      setSigningStep(5) // Completed
       setUploadResult(result)
       setAlertMessage({ type: 'success', text: `File encrypted and uploaded! Blob ID: ${result.blobId}` })
       setShowFileSent(true)
@@ -103,6 +124,7 @@ function App() {
     } catch (error) {
       console.error('Upload failed:', error)
       setAlertMessage({ type: 'error', text: error instanceof Error ? error.message : 'Upload failed' })
+      setSigningStep(0) // Reset on error
 
     } finally {
       setIsUploading(false)
@@ -350,6 +372,7 @@ function App() {
                   console.log('Sign in clicked - wallet connection should be triggered');
                 }}
                 isUploading={isUploading}
+                signingStep={signingStep}
               />
             ) : (
               /* Sending Default State */
