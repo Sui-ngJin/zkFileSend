@@ -7,7 +7,6 @@ export const SUI_RPC =
 
 // Package and policy IDs from deployed contracts
 export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID;
-export const POLICY_ID = import.meta.env.VITE_POLICY_ID;
 export const CONTENT_ID_HEX =
 	import.meta.env.VITE_CONTENT_ID_HEX || "6a6f686e5f646f65";
 
@@ -35,10 +34,6 @@ export const ALLOWLIST = (import.meta.env.VITE_ALLOWLIST || "")
 // Validation
 if (!PACKAGE_ID) {
 	throw new Error("VITE_PACKAGE_ID not configured in .env");
-}
-
-if (!POLICY_ID) {
-	throw new Error("VITE_POLICY_ID not configured in .env");
 }
 
 if (SEAL_SERVER_IDS.length === 0) {

@@ -11,3 +11,5 @@ yarn-error.log*
 .vscode/*
 /move/myapp/build/
 /.idea/git_toolbox_prj.xml
+
+/move/myapp/build/

@@ -1,11 +1,14 @@
-import { useState } from 'react'
-import { useCurrentAccount, useSignAndExecuteTransaction, useSignPersonalMessage } from '@mysten/dapp-kit'
-import { sealService } from './services/sealService'
-import Header from './components/Header'
-import { FAQ } from './components/FAQ'
-import SendingSelected from './components/SendingSelected'
-import FileSent from './components/FileSent'
-import uploadIcon from './assets/upload.svg'
+import { useState } from "react";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSignPersonalMessage,
+} from "@mysten/dapp-kit";
+import { sealService } from "./services/sealService";
+import Header from "./components/Header";
+import { FAQ } from "./components/FAQ";
+import uploadIcon from "./assets/upload.svg";
+import { createSendTicketLink } from "./services/zkSendService";
 
 // File type detection based on magic bytes
 function detectFileType(data: Uint8Array): string {
@@ -41,21 +44,31 @@ function detectFileType(data: Uint8Array): string {
 }
 
 function App() {
-  const currentAccount = useCurrentAccount()
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage()
-  const [receiverAddress, setReceiverAddress] = useState('')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadResult, setUploadResult] = useState<{ blobId: string; encryptedSize: number } | null>(null)
-  const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null)
-  const [currentTab, setCurrentTab] = useState<'send' | 'download'>('send')
-  const [showFileSent, setShowFileSent] = useState(false)
-  const [signingStep, setSigningStep] = useState(0)
+	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+	const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+	const [receiverAddress, setReceiverAddress] = useState("");
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [isUploading, setIsUploading] = useState(false);
+	const [uploadResult, setUploadResult] = useState<{
+		blobId: string;
+		encryptedSize: number;
+	} | null>(null);
+	const [alertMessage, setAlertMessage] = useState<{
+		type: "error" | "success";
+		text: string;
+	} | null>(null);
+	const [currentTab, setCurrentTab] = useState<"send" | "download">("send");
 
-  // Decrypt functionality states
-  const [blobIdInput, setBlobIdInput] = useState('')
-  const [isDecrypting, setIsDecrypting] = useState(false)
+	// Decrypt functionality states
+	const [blobIdInput, setBlobIdInput] = useState("");
+	const [isDecrypting, setIsDecrypting] = useState(false);
+	// Helper function to extract IDs from transaction result
+	const [link, setLink] = useState("");
+
+	const [showFileSent, setShowFileSent] = useState(false)
+	const [signingStep, setSigningStep] = useState(0)
+
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -87,6 +100,45 @@ function App() {
       setAlertMessage({ type: 'error', text: 'Please connect your wallet first' })
       return
     }
+		setIsUploading(true);
+		setAlertMessage(null);
+		try {
+			console.log("Starting encryption and upload...");
+			await sealService.initPolicy(
+				receiverAddress,
+				currentAccount.address,
+				signAndExecuteTransaction,
+			);	
+			const result = await sealService.encryptAndUploadWithWallet(
+				selectedFile,
+				currentAccount.address,
+				signAndExecuteTransaction,
+			);
+
+			if (!result) throw new Error('wtf22222')
+
+			setUploadResult(result);
+			setAlertMessage({
+				type: "success",
+				text: `File encrypted and uploaded! Blob ID: ${result.blobId}`,
+			});
+
+			await createSendTicketLink(
+				sessionStorage.getItem('ticketId')!,
+				currentAccount.address,
+				signAndExecuteTransaction,
+				setLink,
+			);
+		} catch (error) {
+			console.error("Upload failed:", error);
+			setAlertMessage({
+				type: "error",
+				text: error instanceof Error ? error.message : "Upload failed",
+			});
+		} finally {
+			setIsUploading(false);
+		}
+	};
 
     setIsUploading(true)
     setAlertMessage(null)
@@ -111,14 +163,14 @@ function App() {
       await new Promise(resolve => setTimeout(resolve, 1500))
 
       const result = await sealService.encryptAndUploadWithWallet(
-        selectedFile,
-        currentAccount.address,
+        selectedFile!,
+        currentAccount?.address!,
         signAndExecuteTransaction
       )
 
       setSigningStep(5) // Completed
-      setUploadResult(result)
-      setAlertMessage({ type: 'success', text: `File encrypted and uploaded! Blob ID: ${result.blobId}` })
+      setUploadResult(result!)
+      setAlertMessage({ type: 'success', text: `File encrypted and uploaded! Blob ID: ${result!.blobId}` })
       setShowFileSent(true)
 
     } catch (error) {
