@@ -47,6 +47,9 @@ const claimerEmailBytes = hashEmailToVector(claimerEmailRaw);
 		ttlMin: 10,
 		suiClient: sealSuiClient,
 	});
+
+
+
 	const { signature } = await signer.signPersonalMessage(
 		sessionKey.getPersonalMessage(),
 	);
@@ -59,7 +62,6 @@ const claimerEmailBytes = hashEmailToVector(claimerEmailRaw);
 			tx.pure.vector("u8", fromHex(CONTENT_ID_HEX)),
 			tx.object(POLICY_ID),
 			tx.object(ticketId),
-			tx.object("0x6"),
 			tx.pure.vector("u8", claimerEmailBytes),
 		],
 	});

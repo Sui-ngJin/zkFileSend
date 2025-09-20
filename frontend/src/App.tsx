@@ -376,22 +376,34 @@ function App() {
 			return;
 		}
 
+		if (hasWallet && !ticketId) {
+			setAlertMessage({
+				type: "error",
+				text: "Ticket information is required to decrypt this file.",
+			});
+			return;
+		}
+
 		setIsDecrypting(true);
 		setAlertMessage(null);
 		try {
 			console.log("Starting decryption...");
 			const decryptedData = hasWallet
-				? await sealService.decryptAndDownloadWithWallet(
-					blobIdInput,
-					currentAccount!.address,
-					signPersonalMessage,
-				)
+				? await sealDecryptService.decryptWithWallet({
+					blobId: blobIdInput,
+					ticketId: ticketId as string,
+					claimerAddress: currentAccount!.address,
+					signPersonalMessage: async ({ message }) => {
+						const { signature } = await signPersonalMessage({ message });
+						return { signature };
+					},
+				})
 				: await sealDecryptService.decryptWithTicket(
 					blobIdInput,
 					ticketId!,
 					zkLoginAddress!,
 					zkLoginEmail!,
-					signPersonalMessageWithZkLogin
+					async ({ message }) => signPersonalMessageWithZkLogin({ message }),
 				);
 
 			// Detect file type and create download link

@@ -7,7 +7,6 @@ export const SUI_RPC =
 
 // Package and policy IDs from deployed contracts
 export const PACKAGE_ID = import.meta.env.VITE_PACKAGE_ID;
-export const POLICY_ID = import.meta.env.VITE_POLICY_ID;
 export const CONTENT_ID_HEX =
 	import.meta.env.VITE_CONTENT_ID_HEX || "6a6f686e5f646f65";
 
@@ -19,10 +18,6 @@ export const ZKSEND_CLAIM_API =
 export const ZKSEND_NETWORK = (
 	import.meta.env.VITE_ZKSEND_NETWORK || NETWORK
 ) as typeof NETWORK;
-
-// Misc
-export const CLOCK_OBJECT_ID =
-	import.meta.env.VITE_CLOCK_OBJECT_ID || "0x6";
 
 // Seal server configuration
 export const SEAL_SERVER_IDS = (import.meta.env.VITE_SEAL_SERVER_IDS || "")
@@ -39,19 +34,9 @@ export const WALRUS_EPOCHS = Number(import.meta.env.VITE_WALRUS_EPOCHS || "5");
 export const WALRUS_DELETABLE =
 	(import.meta.env.VITE_WALRUS_DELETABLE || "true") === "true";
 
-// Access control
-export const OPEN_AFTER_MS = BigInt(import.meta.env.VITE_OPEN_AFTER_MS || "0");
-export const ALLOWLIST = (import.meta.env.VITE_ALLOWLIST || "")
-	.split(",")
-	.filter(Boolean);
-
 // Validation
 if (!PACKAGE_ID) {
 	throw new Error("VITE_PACKAGE_ID not configured in .env");
-}
-
-if (!POLICY_ID) {
-	throw new Error("VITE_POLICY_ID not configured in .env");
 }
 
 if (SEAL_SERVER_IDS.length === 0) {

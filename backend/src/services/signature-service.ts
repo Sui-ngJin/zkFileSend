@@ -64,11 +64,19 @@ export async function createZkLoginSignatureForPersonalMessage(
 		throw new Error("ZkLogin proof is missing from session");
 	}
 	const messageBytes = fromBase64(messageBase64);
+	console.log(`messageBytes: ${messageBytes}`);
+
 	const intentMessage = personalMessageWithIntent(messageBytes);
+	console.log(`intentMessage: ${intentMessage}`);
+
 	const digest = blake2b(intentMessage, { dkLen: 32 });
+	console.log(`digest: ${digest}`);
+
 	const ephemeralKeypair = Ed25519Keypair.fromSecretKey(
 		fromBase64(session.ephemeralKeyPair),
 	);
+	console.log(ephemeralKeypair);
+
 	const userSignatureBytes = await ephemeralKeypair.sign(digest);
 
 	return getZkLoginSignature({
@@ -76,4 +84,28 @@ export async function createZkLoginSignatureForPersonalMessage(
 		maxEpoch: session.maxEpoch,
 		userSignature: toBase64(userSignatureBytes),
 	});
+}
+
+export async function createEphemeralSignatureForPersonalMessage(
+	session: StoredSession,
+	messageBase64: string,
+) {
+	const messageBytes = fromBase64(messageBase64);
+	console.log(`messageBytes for ephemeral: ${messageBytes}`);
+
+	const intentMessage = personalMessageWithIntent(messageBytes);
+	console.log(`intentMessage for ephemeral: ${intentMessage}`);
+
+	const digest = blake2b(intentMessage, { dkLen: 32 });
+	console.log(`digest for ephemeral: ${digest}`);
+
+	const ephemeralKeypair = Ed25519Keypair.fromSecretKey(
+		fromBase64(session.ephemeralKeyPair),
+	);
+	console.log(`ephemeralKeypair for session key:`, ephemeralKeypair);
+
+	const userSignatureBytes = await ephemeralKeypair.sign(digest);
+
+	// SessionKey.setPersonalMessageSignature는 에페멀 키의 원시 서명만 필요
+	return toBase64(userSignatureBytes);
 }

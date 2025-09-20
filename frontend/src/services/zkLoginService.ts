@@ -161,9 +161,9 @@ function toBase64(data: Uint8Array): string {
 }
 
 export async function signPersonalMessageWithZkLogin(
-	message: Uint8Array,
-): Promise<string> {
-	const base64Message = toBase64(message);
+	params: { message: Uint8Array },
+): Promise<{ signature: string }> {
+	const base64Message = toBase64(params.message);
 	const response = await request<SponsoredPersonalMessageResponse>(
 		"/api/auth/sign-personal-message",
 		{
@@ -172,5 +172,24 @@ export async function signPersonalMessageWithZkLogin(
 		},
 	);
 
-	return response.signature;
+	console.log(`sign personal message response ::: ${JSON.stringify(response, null, 2)}`);
+
+	return { signature: response.signature };
+}
+
+export async function signEphemeralPersonalMessageWithZkLogin(
+	params: { message: Uint8Array },
+): Promise<{ signature: string }> {
+	const base64Message = toBase64(params.message);
+	const response = await request<SponsoredPersonalMessageResponse>(
+		"/api/auth/sign-ephemeral-personal-message",
+		{
+			method: "POST",
+			body: JSON.stringify({ message: base64Message }),
+		},
+	);
+
+	console.log(`sign ephemeral personal message response ::: ${JSON.stringify(response, null, 2)}`);
+
+	return { signature: response.signature };
 }

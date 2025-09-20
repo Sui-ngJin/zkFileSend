@@ -1,14 +1,15 @@
 import { createHash } from 'crypto';
 
 /**
- * 이메일 주소를 SHA3-256으로 해시 처리하여 vector<u8> 형태로 반환
+ * 이메일 주소를 SHA2-256으로 해시 처리하여 vector<u8> 형태로 반환
+ * Move 컨트랙트의 hash::sha2_256과 일치하도록 수정
  */
 export function hashEmailToVector(email: string): Uint8Array {
 	// 이메일 주소 정규화 (소문자로 변환, 공백 제거)
 	const normalizedEmail = email.trim().toLowerCase();
 
-	// SHA3-256 해시 생성
-	const hash = createHash('sha3-256');
+	// SHA2-256 해시 생성 (Move의 hash::sha2_256과 동일)
+	const hash = createHash('sha256');
 	hash.update(normalizedEmail);
 	const hashBuffer = hash.digest();
 

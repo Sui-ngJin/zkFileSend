@@ -7,7 +7,7 @@ import {
 	extractHashFromRequest,
 } from "../services/enoki-service.js";
 import { createZkLoginSignatureForTransaction } from "../services/signature-service.js";
-import { createZkLoginSignatureForPersonalMessage } from "../services/signature-service.js";
+import { createZkLoginSignatureForPersonalMessage, createEphemeralSignatureForPersonalMessage } from "../services/signature-service.js";
 import {
 	requireSession,
 	type AuthenticatedRequest,
@@ -167,6 +167,32 @@ router.post(
 				error instanceof Error
 					? error.message
 					: "Failed to sign personal message";
+			res.status(400).json({ error: messageText });
+		}
+	},
+);
+
+router.post(
+	"/sign-ephemeral-personal-message",
+	requireSession,
+	async (req: Request, res: Response) => {
+		const { session } = req as AuthenticatedRequest;
+		const message = req.body?.message;
+		if (!message || typeof message !== "string") {
+			return res.status(400).json({ error: "message must be a base64 string" });
+		}
+
+		try {
+			const signature = await createEphemeralSignatureForPersonalMessage(
+				session,
+				message,
+			);
+			res.json({ signature });
+		} catch (error) {
+			const messageText =
+				error instanceof Error
+					? error.message
+					: "Failed to sign personal message with ephemeral key";
 			res.status(400).json({ error: messageText });
 		}
 	},

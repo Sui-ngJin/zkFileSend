@@ -149,7 +149,7 @@ const [zkLoginError, setZkLoginError] = useState<string | null>(null);
 								variant="outline"
 								colorScheme="blue"
 								onClick={handleZkLogin}
-								isLoading={zkLoginLoading}
+								loading={zkLoginLoading}
 							>
 								Sign in with Google (zkLogin)
 							</Button>
