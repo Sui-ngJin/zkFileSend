@@ -1,0 +1,29 @@
+{
+  "name": "sui-seal-prototype",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "publish": "bash ./scripts/publish.sh",
+    "init:policy": "tsx src/scripts/init-policy.ts",
+    "encrypt:upload": "tsx ./src/scripts/encrypt-upload.ts",
+    "ticket:mint": "tsx ./src/scripts/mint-tickets.ts",
+    "ticket:set-email": "tsx ./src/scripts/set-ticket-email.ts",
+    "ticket:zk-send": "tsx ./src/scripts/zk-send.ts",
+    "fetch:decrypt": "tsx src/scripts/fetch-decrypt.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@mysten/seal": "^0.5.2",
+    "@mysten/sui": "^1.37.6",
+    "@mysten/walrus": "^0.6.7",
+    "@mysten/zksend": "^0.14.0",
+    "dotenv": "^17.2.2"
+  }
+}
