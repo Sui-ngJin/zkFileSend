@@ -15,6 +15,7 @@ yarn-error.log*
 /**/.env
 
 /**/dist
+
 /.idea/modules.xml
 /.idea/vcs.xml
 /.idea/zkFileSend.iml
