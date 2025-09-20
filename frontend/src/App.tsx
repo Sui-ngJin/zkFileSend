@@ -131,48 +131,24 @@ function App() {
     }
   }
 
-  const handleDecryptAndDownload = async () => {
-    if (!blobIdInput) {
-      setAlertMessage({ type: 'error', text: 'Please enter Blob ID' })
-      return
-    }
-
-    if (!currentAccount) {
-      setAlertMessage({ type: 'error', text: 'Please connect your wallet first' })
-      return
-    }
-
-    setIsDecrypting(true)
-    setAlertMessage(null)
-    try {
-      console.log('Starting decryption...')
-      const decryptedData = await sealService.decryptAndDownloadWithWallet(
-        blobIdInput,
-        currentAccount.address,
-        signPersonalMessage
-      )
-
-      // Detect file type and create download link
-      const fileExtension = detectFileType(decryptedData)
-      const blob = new Blob([new Uint8Array(decryptedData)])
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `decrypted_file_${Date.now()}${fileExtension}`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-
-      setAlertMessage({ type: 'success', text: 'File decrypted and downloaded successfully!' })
-
-    } catch (error) {
-      console.error('Decryption failed:', error)
-      setAlertMessage({ type: 'error', text: error instanceof Error ? error.message : 'Decryption failed' })
-
-    } finally {
-      setIsDecrypting(false)
-    }
+  if (currentTab === 'download') {
+    return (
+      <div style={{
+        width: '100%',
+        position: 'relative',
+        minHeight: '100vh',
+        backgroundColor: '#fbfaf9',
+        fontFamily: 'Pretendard',
+        overflowX: 'hidden'
+      }}>
+        <Header
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          onGoogleSignIn={() => console.log('Google Sign In')}
+        />
+        <Download onGoogleSignIn={() => console.log('Google Sign In')} />
+      </div>
+    );
   }
 
   return (
@@ -247,7 +223,11 @@ function App() {
       </div>
 
       {/* Header */}
-      <Header currentTab={currentTab} onTabChange={setCurrentTab} />
+      <Header
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        onGoogleSignIn={() => console.log('Google Sign In')}
+      />
 
       {/* Main Content */}
       <div style={{
@@ -312,25 +292,6 @@ function App() {
             }}>
               {alertMessage.text}
             </div>
-          )}
-
-          {/* Test Button for FileSent */}
-          {!showFileSent && (
-            <button
-              onClick={() => setShowFileSent(true)}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#02bbff',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-            >
-              📝 Test FileSent Component
-            </button>
           )}
 
           {/* Upload Result */}
