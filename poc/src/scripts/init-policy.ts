@@ -4,30 +4,30 @@ import type {
 	SuiObjectChangeCreated,
 } from "@mysten/sui/client";
 import { suiClient } from "../lib/seal.js";
-import { PACKAGE_ID, SUI_SECRET_KEY } from "../lib/env.js";
+import { PACKAGE_ID, SUI_SECRET_KEY, RECEIVER_EMAIL } from "../lib/env.js";
 import { signerFromEnvKey } from "../lib/keypair.js";
+import { hashEmailToVector } from "../lib/hash.js";
 
 const signer = signerFromEnvKey(SUI_SECRET_KEY);
 
 (async () => {
 	const admin = signer.getPublicKey().toSuiAddress();
-	const ticketRecipient = process.env.TICKET_RECIPIENT || admin;
-	const ticketCountRaw = process.env.TICKET_COUNT || "1";
-	const ticketCount = Number(ticketCountRaw);
 
-	if (!Number.isInteger(ticketCount) || ticketCount <= 0) {
+	if (!RECEIVER_EMAIL) {
 		throw new Error(
-			`Set TICKET_COUNT to a positive integer (received "${ticketCountRaw}")`,
+			"Set RECEIVER_EMAIL in the environment (should be the recipient's email address)",
 		);
 	}
+
+	// 이메일을 SHA3-256으로 해시 처리
+	const hashedEmailBytes = hashEmailToVector(RECEIVER_EMAIL);
 
 	const tx = new Transaction();
 	tx.moveCall({
 		target: `${PACKAGE_ID}::content_gate_ticket::new_policy`,
 		arguments: [
 			tx.pure.address(admin),
-			tx.pure.address(ticketRecipient),
-			tx.pure.u64(ticketCount),
+			tx.pure.vector("u8", hashedEmailBytes),
 		],
 	});
 
@@ -68,12 +68,9 @@ const signer = signerFromEnvKey(SUI_SECRET_KEY);
 		console.warn(
 			"No Ticket objects reported in response. Re-run with tracing enabled to inspect.",
 		);
-	} else if (ticketIds.length !== ticketCount) {
-		console.warn(
-			`Requested ${ticketCount} tickets but observed ${ticketIds.length}. Check gas budget and response.`,
-		);
 	}
 
+	console.log("RECEIVER_EMAIL =", RECEIVER_EMAIL);
 	console.log("POLICY_ID =", policyId);
-	console.log("TICKET_IDS =", ticketIds.join(", "));
+	console.log("TICKET_ID =", ticketIds[0] || "Not found");
 })();

@@ -11,6 +11,7 @@ import {
 } from "../lib/env.js";
 import { signerFromEnvKey } from "../lib/keypair.js";
 import { WalrusBlob } from "@mysten/walrus";
+import { hashEmailToVector } from "../lib/hash.js";
 
 const signer = signerFromEnvKey(SUI_SECRET_KEY);
 const ticketId = process.env.TICKET_ID;
@@ -33,9 +34,8 @@ if (!claimerEmailRaw) {
 	);
 }
 
-const claimerEmailBytes = Array.from(
-	new TextEncoder().encode(claimerEmailRaw.trim().toLowerCase()),
-);
+// 이메일을 SHA3-256으로 해시 처리
+const claimerEmailBytes = hashEmailToVector(claimerEmailRaw);
 
 (async () => {
 	const blob: WalrusBlob = await walrus.getBlob({ blobId });

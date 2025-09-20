@@ -9,8 +9,6 @@
 		"publish": "bash ./scripts/publish.sh",
 		"init:policy": "tsx src/scripts/init-policy.ts",
 		"encrypt:upload": "tsx ./src/scripts/encrypt-upload.ts",
-		"ticket:mint": "tsx ./src/scripts/mint-tickets.ts",
-		"ticket:set-email": "tsx ./src/scripts/set-ticket-email.ts",
 		"ticket:zk-send": "tsx ./src/scripts/zk-send.ts",
 		"fetch:decrypt": "tsx src/scripts/fetch-decrypt.ts"
 	},
