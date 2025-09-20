@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:ital,wght@0,500;0,600;0,700&display=swap');
+
+.faqContainer {
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  font-size: 32px;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #221d1d;
+}
+
+.faqTitle {
+  letter-spacing: -0.02em;
+  line-height: 120%;
+  font-weight: 600;
+}
+
+.faqList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 320px;
+  max-width: 480px;
+  font-size: 16px;
+}
+
+.faqItem {
+  width: 100%;
+  border-radius: 6px;
+  background-color: #fbfaf9;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.faqQuestion {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.faqQuestion:hover {
+  background-color: #f5f5f5;
+  border-radius: 6px;
+}
+
+.questionText {
+  letter-spacing: -0.02em;
+  line-height: 120%;
+  font-weight: 500;
+  color: #221d1d;
+}
+
+.iconWrapper {
+  width: 12px;
+  height: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Minus icon (expanded state) */
+.minusIcon {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: #02bbff;
+}
+
+/* Plus icon (collapsed state) */
+.plusIconContainer {
+  width: 12px;
+  height: 12px;
+  position: relative;
+}
+
+.plusIconH {
+  position: absolute;
+  top: 5px;
+  left: 0px;
+  border-radius: 1px;
+  background-color: #02bbff;
+  width: 12px;
+  height: 2px;
+}
+
+.plusIconV {
+  position: absolute;
+  top: 0px;
+  left: 7px;
+  border-radius: 1px;
+  background-color: #02bbff;
+  width: 12px;
+  height: 2px;
+  transform: rotate(90deg);
+  transform-origin: 0 0;
+}
+
+.faqAnswer {
+  width: 100%;
+  padding: 0 16px 18px 16px;
+  font-size: 14px;
+  line-height: 125%;
+  font-weight: 500;
+  color: #636161;
+  text-align: left;
+  animation: fadeIn 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .faqContainer {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .faqList {
+    width: 100%;
+  }
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>zkFileSend</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            min-height: 100vh;
+            scroll-behavior: smooth;
+            line-height: normal;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        #root {
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* 버튼 클릭 시 화면 점프 방지 */
+        button, div[role="button"] {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 모달 오픈 시 스크롤바 공간 보상 */
+        body:has([data-testid="modal-overlay"]) {
+            overflow: hidden;
+            padding-right: var(--scrollbar-width, 0px);
+        }
+
+        /* 모든 요소의 위치 고정 */
+        body:has([data-testid="modal-overlay"]) * {
+            position: relative;
+        }
+
+        /* dApp Kit 모달 오버레이 스타일 개선 */
+        [data-testid="modal-overlay"] {
+            backdrop-filter: blur(8px) !important;
+        }
+
+        /* 스크롤바 너비 계산을 위한 CSS 변수 */
+        :root {
+            --scrollbar-width: 0px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // 스크롤바 너비 계산 및 CSS 변수 설정
+        function calculateScrollbarWidth() {
+            const outer = document.createElement('div');
+            outer.style.visibility = 'hidden';
+            outer.style.overflow = 'scroll';
+            outer.style.msOverflowStyle = 'scrollbar';
+            document.body.appendChild(outer);
+
+            const inner = document.createElement('div');
+            outer.appendChild(inner);
+
+            const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+
+            outer.parentNode.removeChild(outer);
+
+            document.documentElement.style.setProperty('--scrollbar-width', scrollbarWidth + 'px');
+        }
+
+        // 페이지 로드 시 스크롤바 너비 계산
+        calculateScrollbarWidth();
+
+        // 윈도우 리사이즈 시 재계산
+        window.addEventListener('resize', calculateScrollbarWidth);
+
+        // 간단한 모달 상태 관리 (CSS가 대부분 처리)
+        const observer = new MutationObserver(() => {
+            const hasModal = document.querySelector('[data-testid="modal-overlay"]');
+            if (hasModal) {
+                document.body.classList.add('modal-open');
+            } else {
+                document.body.classList.remove('modal-open');
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
