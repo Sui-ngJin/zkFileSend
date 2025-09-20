@@ -26,3 +26,5 @@ export const ALLOWLIST = (process.env.ALLOWLIST || "")
 	.filter(Boolean);
 export const SUI_SECRET_KEY = process.env.SUI_SECRET_KEY!;
 export const BLOB_ID = process.env.BLOB_ID;
+export const HASHED_EMAIL = process.env.HASHED_EMAIL;
+export const RECEIVER_EMAIL = process.env.RECEIVER_EMAIL;
