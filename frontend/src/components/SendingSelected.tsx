@@ -2,7 +2,7 @@ import { FunctionComponent, useState, useEffect } from 'react';
 import { useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
 import clearButtonIcon from '../../../../zkFileSend/frontend/src/assets/clear-button.svg';
 import enterButtonIcon from '../../../../zkFileSend/frontend/src/assets/enter-button.svg';
-import infoIcon from '../../../../zkFileSend/frontend/src/assets/info-icon.svg';
+import SendingProgress from './SendingProgress';
 
 interface SendingSelectedProps {
   selectedFile: File;
@@ -13,6 +13,7 @@ interface SendingSelectedProps {
   onSend: () => void;
   onSignIn: () => void;
   isUploading: boolean;
+  signingStep?: number; // 1-4 for progress steps, 0 for not started, 5+ for completed
 }
 
 // Format file size helper function
@@ -31,7 +32,10 @@ const SendingSelected: FunctionComponent<SendingSelectedProps> = ({
                                                                     receiverAddress,
                                                                     onReceiverChange,
                                                                     onReset,
-                                                                    onSend, isUploading
+                                                                    onSend,
+                                                                    onSignIn,
+                                                                    isUploading,
+                                                                    signingStep = 0
                                                                   }) => {
   const currentAccount = useCurrentAccount();
   const [isAddressConfirmed, setIsAddressConfirmed] = useState(false);
@@ -109,6 +113,7 @@ const SendingSelected: FunctionComponent<SendingSelectedProps> = ({
   const isFormComplete = selectedFile && receiverAddress && isAddressConfirmed;
   const shouldShowSignIn = !currentAccount && isFormComplete;
   const shouldActivateButton = currentAccount && isFormComplete && hasEnoughBalance;
+  const isSigningInProgress = signingStep > 0 && signingStep <= 4;
 
   // Trigger wallet connection by clicking header ConnectButton
   const triggerWalletConnection = () => {
@@ -329,217 +334,35 @@ const SendingSelected: FunctionComponent<SendingSelectedProps> = ({
         height: '2px'
       }} />
 
-      {/* Sign Process Steps */}
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: '10px'
-      }}>
-        <div style={{
-          fontSize: '14px',
-          letterSpacing: '-0.02em',
-          fontWeight: '500',
-          color: '#636161'
-        }}>
-          Sign process to send
-        </div>
-
-        <div style={{
-          width: '100%',
-          borderRadius: '6px',
-          backgroundColor: '#fff',
-          border: '1px solid #f1f1f1',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          padding: '12px 16px',
-          gap: '12px',
-          color: '#b6b6b6',
-          boxSizing: 'border-box'
-        }}>
-          {/* Step 1 */}
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <div style={{
-                width: '17px',
-                height: '17px',
-                borderRadius: '50%',
-                border: '2px solid #d1d1d1',
-                boxSizing: 'border-box'
-              }} />
-              <div style={{
-                fontSize: '16px',
-                letterSpacing: '-0.02em',
-                fontWeight: '500'
-              }}>
-                reserve storage space
-              </div>
-            </div>
-            <div style={{
-              fontSize: '16px',
-              letterSpacing: '-0.02em',
-              fontWeight: '500'
-            }}>
-              0.0403 SUI
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <div style={{
-                width: '17px',
-                height: '17px',
-                borderRadius: '50%',
-                border: '2px solid #d1d1d1',
-                boxSizing: 'border-box'
-              }} />
-              <div style={{
-                fontSize: '16px',
-                letterSpacing: '-0.02em',
-                fontWeight: '500'
-              }}>
-                encrypt, upload, and send the file
-              </div>
-            </div>
-            <div style={{
-              fontSize: '16px',
-              letterSpacing: '-0.02em',
-              fontWeight: '500'
-            }}>
-              0.0161 SUI
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Total Cost */}
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        fontSize: '16px'
-      }}>
-        <div style={{
-          fontSize: '16px',
-          letterSpacing: '-0.02em',
-          fontWeight: '500',
-          color: '#636161'
-        }}>
-          Total cost
-        </div>
-        <div style={{
-          fontSize: '16px',
-          lineHeight: '135%',
-          fontWeight: '500',
-          color: '#221d1d',
-          opacity: '0.8'
-        }}>
-          {totalFee.toFixed(4)} SUI
-        </div>
-      </div>
-
-      {/* Send Button */}
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-        fontSize: '16px',
-        color: '#fff'
-      }}>
-        <button
-          onClick={shouldShowSignIn ? triggerWalletConnection : shouldActivateButton ? onSend : undefined}
-          disabled={shouldShowSignIn ? false : isUploading || !shouldActivateButton}
-          style={{
-            width: '100%',
-            borderRadius: '6px',
-            backgroundColor: shouldShowSignIn
-              ? '#221d1d'
-              : currentAccount && !hasEnoughBalance
-                ? '#ff5f57'  // Red for insufficient balance
+      {/* Sign Process Steps with Progress */}
+      <SendingProgress
+        currentStep={signingStep}
+        onSignIn={shouldShowSignIn ? triggerWalletConnection : onSend}
+        buttonText={
+          shouldShowSignIn
+            ? 'Sign in'
+            : currentAccount && !hasEnoughBalance
+              ? 'Insufficient balance'
+              : (isSigningInProgress || isUploading)
+                ? 'Signing...'
+                : 'Sign in wallet'
+        }
+        buttonDisabled={
+          shouldShowSignIn ? false : (isUploading || !shouldActivateButton || isSigningInProgress)
+        }
+        buttonStyle={{
+          backgroundColor: shouldShowSignIn
+            ? '#221d1d'
+            : currentAccount && !hasEnoughBalance
+              ? '#ff5f57'  // Red for insufficient balance
+              : (isSigningInProgress || isUploading)
+                ? '#02bbff'  // Blue for signing
                 : shouldActivateButton
                   ? '#02bbff'  // Blue for ready to send
                   : '#b6b6b6', // Gray for disabled
-            color: shouldShowSignIn || (currentAccount && !hasEnoughBalance)
-              ? '#fff'
-              : shouldActivateButton
-                ? '#fff'
-                : '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '12px 16px',
-            border: 'none',
-            fontSize: '16px',
-            letterSpacing: '-0.02em',
-            fontWeight: '600',
-            cursor: (shouldShowSignIn || shouldActivateButton) && !isUploading ? 'pointer' : 'not-allowed',
-            opacity: 1,
-            boxSizing: 'border-box',
-            gap: currentAccount && !hasEnoughBalance ? '6px' : '0',
-            height: '41px'
-          }}
-        >
-          {shouldShowSignIn
-            ? 'Sign in'
-            : isUploading
-              ? 'Encrypting & Uploading...'
-              : currentAccount && !hasEnoughBalance
-                ? (
-                  <>
-                    <img
-                      src={infoIcon}
-                      alt="Info"
-                      style={{
-                        width: '16px',
-                        height: '16px',
-                        filter: 'brightness(0) invert(1) opacity(0.66)' // Make icon white with 66% opacity
-                      }}
-                    />
-                    <span style={{
-                      fontFamily: 'Pretendard',
-                      fontWeight: '600',
-                      color: '#fff'
-                    }}>
-                      Insufficient balance
-                    </span>
-                  </>
-                )
-                : 'Sign to get ready'}
-        </button>
-        <div style={{
-          fontSize: '14px',
-          fontWeight: '500',
-          color: '#b6b6b6',
-          textAlign: 'center'
-        }}>
-          Only the receiver can see this file not us, not even Sui or Walrus validators.
-        </div>
-      </div>
+          cursor: (shouldShowSignIn || shouldActivateButton) && !isUploading && !isSigningInProgress ? 'pointer' : 'not-allowed'
+        }}
+      />
     </div>
   );
 };
