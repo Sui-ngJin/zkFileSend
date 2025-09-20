@@ -10,6 +10,7 @@ export type StoredSession = {
 	maxEpoch: number;
 	ephemeralKeyPair: string;
 	proof?: ZkLoginProof;
+	email?: string | null;
 	expiresAt: number;
 };
 

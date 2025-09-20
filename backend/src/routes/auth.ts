@@ -7,6 +7,7 @@ import {
 	extractHashFromRequest,
 } from "../services/enoki-service.js";
 import { createZkLoginSignatureForTransaction } from "../services/signature-service.js";
+import { createZkLoginSignatureForPersonalMessage } from "../services/signature-service.js";
 import {
 	requireSession,
 	type AuthenticatedRequest,
@@ -84,12 +85,13 @@ router.post("/google/complete", async (req: Request, res: Response) => {
 			maxAge: result.expiresAt - Date.now(),
 		});
 
-		res.json({
-			address: result.address,
-			salt: result.salt,
-			publicKey: result.publicKey,
-			expiresAt: result.expiresAt,
-		});
+			res.json({
+				address: result.address,
+				salt: result.salt,
+				publicKey: result.publicKey,
+				expiresAt: result.expiresAt,
+				email: result.email ?? null,
+			});
 	} catch (error) {
 		const message =
 			error instanceof Error ? error.message : "Failed to complete login";
@@ -115,7 +117,11 @@ router.get("/session", (req: Request, res: Response) => {
 	if (!session) {
 		return res.status(401).json({ error: "Session expired" });
 	}
-	res.json({ address: session.address, expiresAt: session.expiresAt });
+	res.json({
+		address: session.address,
+		expiresAt: session.expiresAt,
+		email: session.email ?? null,
+	});
 });
 
 router.post("/sign", requireSession, async (req: Request, res: Response) => {
@@ -139,5 +145,31 @@ router.post("/sign", requireSession, async (req: Request, res: Response) => {
 		res.status(400).json({ error: message });
 	}
 });
+
+router.post(
+	"/sign-personal-message",
+	requireSession,
+	async (req: Request, res: Response) => {
+		const { session } = req as AuthenticatedRequest;
+		const message = req.body?.message;
+		if (!message || typeof message !== "string") {
+			return res.status(400).json({ error: "message must be a base64 string" });
+		}
+
+		try {
+			const signature = await createZkLoginSignatureForPersonalMessage(
+				session,
+				message,
+			);
+			res.json({ signature });
+		} catch (error) {
+			const messageText =
+				error instanceof Error
+					? error.message
+					: "Failed to sign personal message";
+			res.status(400).json({ error: messageText });
+		}
+	},
+);
 
 export default router;

@@ -75,6 +75,26 @@ function normalizeHash(hash: string) {
 	return hash.startsWith("#") ? hash.slice(1) : hash;
 }
 
+function extractEmailFromJwt(idToken: string): string | null {
+	const parts = idToken.split(".");
+	if (parts.length < 2) {
+		return null;
+	}
+	const base64 = parts[1]
+		.replace(/-/g, "+")
+		.replace(/_/g, "/")
+		.padEnd(parts[1].length + ((4 - (parts[1].length % 4)) % 4), "=");
+	try {
+		const payload = JSON.parse(Buffer.from(base64, "base64").toString("utf8")) as {
+			email?: string;
+		};
+		return payload?.email ?? null;
+	} catch (error) {
+		console.warn("Failed to decode id_token payload", error);
+		return null;
+	}
+}
+
 export async function completeGoogleAuth(state: string, hash: string) {
 	const entry = pendingStates.get(state);
 	if (!entry || Date.now() > entry.expiresAt) {
@@ -108,6 +128,8 @@ export async function completeGoogleAuth(state: string, hash: string) {
 		ephemeralPublicKey: ephemeralKeypair.getPublicKey(),
 	});
 
+	const email = extractEmailFromJwt(idToken);
+
 	const { id, expiresAt } = sessionStore.createSession(
 		{
 			address: login.address,
@@ -116,6 +138,7 @@ export async function completeGoogleAuth(state: string, hash: string) {
 			maxEpoch: entry.maxEpoch,
 			ephemeralKeyPair: entry.ephemeralSecret,
 			proof,
+			email,
 		},
 		SESSION_TTL_MS,
 	);
@@ -126,6 +149,7 @@ export async function completeGoogleAuth(state: string, hash: string) {
 		address: login.address,
 		salt: login.salt,
 		publicKey: login.publicKey,
+		email: email ?? undefined,
 	};
 }
 

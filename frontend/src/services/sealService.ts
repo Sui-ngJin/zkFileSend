@@ -23,9 +23,9 @@ type SignAndExecuteTransactionFn = (
 		onError?: (error: any) => void;
 	},
 ) => void;
-type SignPersonalMessageFn = (params: {
-	message: Uint8Array;
-}) => Promise<{ signature: string }>;
+type SignPersonalMessageFn = (
+	message: Uint8Array
+) => Promise<string>;
 
 export class SealService {
 	private suiClient: SuiClient;
@@ -199,9 +199,9 @@ export class SealService {
 				// console.log('SessionKey created for address:', sessionKey.address);
 
 				// 지갑에 personal message 서명 요청
-				const { signature } = await signPersonalMessage({
-					message: sessionKey.getPersonalMessage(),
-				});
+				const signature = await signPersonalMessage(
+					sessionKey.getPersonalMessage()
+				);
 
 				await sessionKey.setPersonalMessageSignature(signature);
 				console.log("Personal message signed");

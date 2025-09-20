@@ -1,16 +1,27 @@
-import { FunctionComponent } from "react";
-import { ConnectButton } from "@mysten/dapp-kit";
+import { FunctionComponent, useMemo } from "react";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
 	currentTab: "send" | "download";
 	onTabChange: (tab: "send" | "download") => void;
+	onSignInClick: () => void;
+	sessionAddress?: string | null;
+	onLogout?: () => void;
 }
 
 const Header: FunctionComponent<HeaderProps> = ({
 	currentTab,
 	onTabChange,
+	onSignInClick,
+	sessionAddress,
+	onLogout,
 }) => {
+	const signInLabel = useMemo(() => {
+		if (!sessionAddress) return "Sign in";
+		const trimmed = sessionAddress.toLowerCase();
+		return `${trimmed.slice(0, 6)}…${trimmed.slice(-4)}`;
+	}, [sessionAddress]);
+
 	return (
 		<div className={styles.header}>
 			<div className={styles.zkfilesendParent}>
@@ -19,8 +30,32 @@ const Header: FunctionComponent<HeaderProps> = ({
 					<div className={styles.label}>beta</div>
 				</div>
 			</div>
-			<div className={styles.signInWrapper}>
-				<ConnectButton connectText="Sign in" />
+			<div className={styles.authButtons}>
+				<div className={styles.signInWrapper}>
+					<button
+						type="button"
+						className={styles.signInButton}
+						onClick={(event) => {
+							event.preventDefault();
+							onSignInClick();
+						}}
+						title={sessionAddress ?? undefined}
+					>
+						<span className={styles.signIn}>{signInLabel}</span>
+					</button>
+				</div>
+				{sessionAddress && onLogout ? (
+					<button
+						type="button"
+						className={styles.logoutButton}
+						onClick={(event) => {
+							event.preventDefault();
+							onLogout();
+						}}
+					>
+						Log out
+					</button>
+				) : null}
 			</div>
 			<div className={styles.frameParent}>
 				<div

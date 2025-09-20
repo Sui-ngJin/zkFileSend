@@ -8,15 +8,14 @@ import {
 	CONTENT_ID_HEX,
 	NETWORK,
 	PACKAGE_ID,
-	POLICY_ID,
 	SEAL_SERVER_IDS,
 	SEAL_SERVER_WEIGHTS,
 	SUI_RPC,
 } from "./env";
 
-export type PersonalMessageSigner = (params: {
-	message: Uint8Array;
-}) => Promise<{ signature: string }>;
+export type PersonalMessageSigner = (
+	message: Uint8Array
+) => Promise<string>;
 
 function normalizeEmail(email: string) {
 	return email.trim().toLowerCase();
@@ -44,28 +43,44 @@ export class SealDecryptService {
 		});
 	}
 
-	async decryptWithTicket(params: {
-		blobId: string;
-		ticketId: string;
-		claimerAddress: string;
-		claimerEmail: string;
-		signPersonalMessage: PersonalMessageSigner;
-	}): Promise<Uint8Array> {
+	async decryptWithTicket(
+		blobId: string,
+		ticketId: string,
+		claimerAddress: string,
+		claimerEmail: string,
+		signPersonalMessage: PersonalMessageSigner,
+	): Promise<Uint8Array> {
 		const emailBytes = new TextEncoder().encode(
-			normalizeEmail(params.claimerEmail),
+			normalizeEmail(claimerEmail),
 		);
 		const policyBytes = Array.from(fromHex(CONTENT_ID_HEX));
 
-		const encrypted = await this.walrus.readBlob({ blobId: params.blobId });
+		const ticketObject = await this.suiClient.getObject({
+			id: ticketId,
+			options: { showContent: true },
+		});
+
+		const policyId = (() => {
+			const fields = (ticketObject.data?.content as {
+				fields?: Record<string, unknown>;
+			})?.fields;
+			const value = fields?.policy_id;
+			if (typeof value === "string") {
+				return value;
+			}
+			throw new Error("Unable to resolve policy_id from ticket");
+		})();
+
+		const encrypted = await this.walrus.readBlob({ blobId });
 
 		const sessionKey = await SessionKey.create({
-			address: params.claimerAddress,
+			address: claimerAddress,
 			packageId: PACKAGE_ID,
 			ttlMin: 10,
 			suiClient: this.suiClient,
 		});
 
-		const { signature } = await params.signPersonalMessage({
+		const { signature } = await signPersonalMessage({
 			message: sessionKey.getPersonalMessage(),
 		});
 		await sessionKey.setPersonalMessageSignature(signature);
@@ -75,8 +90,8 @@ export class SealDecryptService {
 			target: `${PACKAGE_ID}::content_gate_ticket::seal_approve_with_ticket`,
 			arguments: [
 				tx.pure.vector("u8", policyBytes),
-				tx.object(POLICY_ID),
-				tx.object(params.ticketId),
+				tx.object(policyId),
+				tx.object(ticketId),
 				tx.object(CLOCK_OBJECT_ID),
 				tx.pure.vector("u8", Array.from(emailBytes)),
 			],

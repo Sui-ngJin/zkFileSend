@@ -50,14 +50,20 @@ export interface ZkLoginPopupResult {
 	salt: string;
 	publicKey: string;
 	expiresAt: number;
+	email?: string;
 }
 
 export interface SessionInfo {
 	address: string;
 	expiresAt: number;
+	email?: string;
 }
 
 export interface SponsoredSignatureResponse {
+	signature: string;
+}
+
+export interface SponsoredPersonalMessageResponse {
 	signature: string;
 }
 
@@ -144,4 +150,27 @@ export async function signTransactionBlock(
 	);
 
 	return signature;
+}
+
+function toBase64(data: Uint8Array): string {
+	let binary = "";
+	for (let i = 0; i < data.length; i += 1) {
+		binary += String.fromCharCode(data[i]);
+	}
+	return window.btoa(binary);
+}
+
+export async function signPersonalMessageWithZkLogin(
+	message: Uint8Array,
+): Promise<string> {
+	const base64Message = toBase64(message);
+	const response = await request<SponsoredPersonalMessageResponse>(
+		"/api/auth/sign-personal-message",
+		{
+			method: "POST",
+			body: JSON.stringify({ message: base64Message }),
+		},
+	);
+
+	return response.signature;
 }

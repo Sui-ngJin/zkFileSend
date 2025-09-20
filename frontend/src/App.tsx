@@ -1,13 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	useCurrentAccount,
 	useSignAndExecuteTransaction,
 	useSignPersonalMessage,
 } from "@mysten/dapp-kit";
+import { ZkSendLink } from "@mysten/zksend";
 import { sealService } from "./services/sealService";
+import { sealDecryptService } from "./services/sealDecryptService";
 import Header from "./components/Header";
 import { FAQ } from "./components/FAQ";
 import uploadIcon from "./assets/upload.svg";
+import { WalletModal } from "./components/WalletModal";
+import {
+	fetchSession,
+	logout,
+	signPersonalMessageWithZkLogin,
+	type SessionInfo,
+} from "./services/zkLoginService";
+import {
+	BACKEND_BASE_URL,
+	ZKSEND_CLAIM_API,
+	ZKSEND_NETWORK,
+} from "./services/env";
+
+type ClaimLinkState = {
+	link: ZkSendLink;
+	ticketId?: string;
+	claimed: boolean;
+	claimedBy?: string;
+};
+
+function formatAddress(address?: string | null) {
+	if (!address) return "";
+	const normalized = address.toLowerCase();
+	return `${normalized.slice(0, 6)}…${normalized.slice(-4)}`;
+}
 
 // File type detection based on magic bytes
 function detectFileType(data: Uint8Array): string {
@@ -72,10 +99,211 @@ function App() {
 		text: string;
 	} | null>(null);
 	const [currentTab, setCurrentTab] = useState<"send" | "download">("send");
+	const [isWalletModalOpen, setWalletModalOpen] = useState(false);
+	const [zkSession, setZkSession] = useState<SessionInfo | null>(null);
+	const [claimLinkInput, setClaimLinkInput] = useState("");
+	const [claimLinkLoading, setClaimLinkLoading] = useState(false);
+	const [isClaiming, setIsClaiming] = useState(false);
+	const [claimLinkState, setClaimLinkState] = useState<ClaimLinkState | null>(
+		null,
+	);
+	const [claimError, setClaimError] = useState<string | null>(null);
+	const [claimDigest, setClaimDigest] = useState<string | null>(null);
+	const [claimNetwork, setClaimNetwork] = useState<"mainnet" | "testnet">(
+		ZKSEND_NETWORK,
+	);
 
 	// Decrypt functionality states
 	const [blobIdInput, setBlobIdInput] = useState("");
 	const [isDecrypting, setIsDecrypting] = useState(false);
+
+	useEffect(() => {
+		let mounted = true;
+		const loadSession = async () => {
+			try {
+				const session = await fetchSession();
+				if (mounted) {
+					setZkSession(session);
+				}
+			} catch (error) {
+				if (mounted) {
+					setZkSession(null);
+				}
+			}
+		};
+
+		if (typeof window !== "undefined") {
+			void loadSession();
+		}
+
+		return () => {
+			mounted = false;
+		};
+	}, []);
+
+	const handleOpenSignIn = () => {
+		setWalletModalOpen(true);
+	};
+
+	const handleCloseSignIn = () => {
+		setWalletModalOpen(false);
+	};
+
+	const handleZkLoginSuccess = (session: SessionInfo) => {
+		setZkSession(session);
+		setAlertMessage({ type: "success", text: "Signed in with zkLogin" });
+		void fetchSession()
+			.then((fresh) => {
+				if (fresh) {
+					setZkSession(fresh);
+				}
+			})
+			.catch(() => {
+				/* ignore refresh errors */
+			});
+	};
+
+	const handleLogout = async () => {
+		try {
+			await logout();
+		} catch (error) {
+			console.error("Failed to log out", error);
+		}
+		setZkSession(null);
+		setWalletModalOpen(false);
+		setAlertMessage({ type: "success", text: "Signed out." });
+	};
+
+	const handleLoadClaimLink = async () => {
+		const rawInput = claimLinkInput.trim();
+		if (!rawInput) {
+			setClaimError("Paste a zkSend claim link first.");
+			setClaimLinkState(null);
+			return;
+		}
+
+		let candidate = rawInput;
+		try {
+			void new URL(candidate);
+		} catch {
+			candidate = `https://${candidate}`;
+		}
+
+		let parsed: URL;
+		try {
+			parsed = new URL(candidate);
+		} catch (error) {
+			setClaimError(
+				error instanceof Error ? error.message : "Invalid claim link URL.",
+			);
+			setClaimLinkState(null);
+			return;
+		}
+
+		const networkParam = parsed.searchParams.get("network");
+		if (networkParam === "mainnet" || networkParam === "testnet") {
+			setClaimNetwork(networkParam);
+		} else {
+			setClaimNetwork(ZKSEND_NETWORK);
+		}
+
+		setClaimLinkLoading(true);
+		setClaimError(null);
+		setClaimDigest(null);
+		setIsClaiming(false);
+
+		try {
+			const link = await ZkSendLink.fromUrl(parsed.toString(), {
+				claimApi: ZKSEND_CLAIM_API,
+			});
+			setClaimLinkState({
+				link,
+				ticketId:
+					link.assets?.nfts?.[0]?.objectId ??
+					link.assets?.coins?.[0]?.objectId ??
+					undefined,
+				claimed: Boolean(link.claimed),
+				claimedBy: link.claimedBy,
+			});
+			setCurrentTab("download");
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to load zkSend claim link.";
+			setClaimLinkState(null);
+			setClaimError(message);
+		} finally {
+			setClaimLinkLoading(false);
+		}
+	};
+
+	const handleClearClaimLink = () => {
+		setClaimLinkInput("");
+		setClaimLinkState(null);
+		setClaimError(null);
+		setClaimDigest(null);
+		setClaimLinkLoading(false);
+		setIsClaiming(false);
+		setClaimNetwork(ZKSEND_NETWORK);
+	};
+
+	const handleClaimTicket = async () => {
+		if (!claimLinkState) {
+			setAlertMessage({
+				type: "error",
+				text: "Load a zkSend claim link before claiming.",
+			});
+			setClaimError("Load a zkSend claim link before claiming.");
+			return;
+		}
+
+		if (!zkSession) {
+			setAlertMessage({
+				type: "error",
+				text: "Sign in with Google (zkLogin) to claim the shared ticket.",
+			});
+			setWalletModalOpen(true);
+			return;
+		}
+
+		setIsClaiming(true);
+		setClaimError(null);
+		setClaimDigest(null);
+
+		try {
+			const link = claimLinkState.link;
+			if (!link.keypair) {
+				throw new Error("이 링크에는 서명용 키가 포함되어 있지 않습니다.");
+			}
+
+			const result = await link.claimAssets(zkSession.address);
+
+			setClaimLinkState((previous) =>
+				previous
+					? {
+						...previous,
+						claimed: true,
+						claimedBy: zkSession.address,
+					}
+					: previous,
+			);
+			setClaimDigest(result.digest ?? null);
+			setAlertMessage({
+				type: "success",
+				text: "티켓을 성공적으로 클레임했습니다. 이제 파일을 복호화할 수 있습니다.",
+			});
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Failed to claim the shared ticket.";
+			setClaimError(message);
+			setAlertMessage({ type: "error", text: message });
+		} finally {
+			setIsClaiming(false);
+		}
+	};
 
 	const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
@@ -133,10 +361,17 @@ function App() {
 			return;
 		}
 
-		if (!currentAccount) {
+		const hasWallet = Boolean(currentAccount?.address);
+		const zkLoginAddress = zkSession?.address ?? null;
+		const zkLoginEmail = zkSession?.email ?? null;
+		const canUseTicketDecrypt =
+			!hasWallet && Boolean(zkLoginAddress && zkLoginEmail && ticketId && alreadyClaimed);
+
+		if (!hasWallet && !canUseTicketDecrypt) {
 			setAlertMessage({
 				type: "error",
-				text: "Please connect your wallet first",
+				text:
+					"Connect a wallet or sign in with zkLogin using a claimed ticket before decrypting.",
 			});
 			return;
 		}
@@ -145,11 +380,19 @@ function App() {
 		setAlertMessage(null);
 		try {
 			console.log("Starting decryption...");
-			const decryptedData = await sealService.decryptAndDownloadWithWallet(
-				blobIdInput,
-				currentAccount.address,
-				signPersonalMessage,
-			);
+			const decryptedData = hasWallet
+				? await sealService.decryptAndDownloadWithWallet(
+					blobIdInput,
+					currentAccount!.address,
+					signPersonalMessage,
+				)
+				: await sealDecryptService.decryptWithTicket(
+					blobIdInput,
+					ticketId!,
+					zkLoginAddress!,
+					zkLoginEmail!,
+					signPersonalMessageWithZkLogin
+				);
 
 			// Detect file type and create download link
 			const fileExtension = detectFileType(decryptedData);
@@ -178,6 +421,44 @@ function App() {
 		}
 	};
 
+	const claimAssets = claimLinkState?.link.assets;
+	const claimSummary = {
+		coins: claimAssets?.coins?.length ?? 0,
+		nfts: claimAssets?.nfts?.length ?? 0,
+		balances: claimAssets?.balances?.length ?? 0,
+	};
+	const ticketId = claimLinkState?.ticketId;
+	const alreadyClaimed = claimLinkState?.claimed ?? false;
+	const claimedBy = claimLinkState?.claimedBy;
+	const claimerAddress = zkSession?.address ?? null;
+	const disableClaimButton = !claimLinkState || alreadyClaimed || isClaiming;
+	const claimButtonLabel = isClaiming
+		? "Claiming..."
+		: !claimLinkState
+			? "Load a claim link"
+			: alreadyClaimed
+				? "Already claimed"
+				: zkSession
+					? "Claim ticket"
+					: "Sign in to claim";
+	const assetParts: string[] = [];
+	if (claimSummary.nfts > 0) {
+		assetParts.push(
+			`${claimSummary.nfts} ticket${claimSummary.nfts === 1 ? "" : "s"}`,
+		);
+	}
+	if (claimSummary.coins > 0) {
+		assetParts.push(
+			`${claimSummary.coins} coin${claimSummary.coins === 1 ? "" : "s"}`,
+		);
+	}
+	if (claimSummary.balances > 0) {
+		assetParts.push(
+			`${claimSummary.balances} balance${claimSummary.balances === 1 ? "" : "s"}`,
+		);
+	}
+	const claimAssetsText = assetParts.length > 0 ? assetParts.join(" • ") : "No assets detected";
+
 	return (
 		<div
 			style={{
@@ -192,6 +473,11 @@ function App() {
 				overflowX: "hidden",
 			}}
 		>
+			<WalletModal
+				isOpen={isWalletModalOpen}
+				onClose={handleCloseSignIn}
+				onZkLoginSuccess={handleZkLoginSuccess}
+			/>
 			{/* Background Grid - Figma Implementation */}
 			<div
 				style={{
@@ -312,7 +598,13 @@ function App() {
 			</div>
 
 			{/* Header */}
-			<Header currentTab={currentTab} onTabChange={setCurrentTab} />
+			<Header
+				currentTab={currentTab}
+				onTabChange={setCurrentTab}
+				onSignInClick={handleOpenSignIn}
+				sessionAddress={zkSession?.address}
+				onLogout={zkSession ? handleLogout : undefined}
+			/>
 
 			{/* Main Content */}
 			<div
@@ -392,6 +684,196 @@ function App() {
 							{alertMessage.text}
 						</div>
 					)}
+
+					<div
+						style={{
+							width: "600px",
+							padding: "24px",
+							borderRadius: "12px",
+							backgroundColor: "#fff",
+							border: "1px solid #ebebeb",
+							boxShadow: "0px 0px 24px rgba(0, 0, 0, 0.06)",
+							display: "flex",
+							flexDirection: "column",
+							gap: "16px",
+							textAlign: "left",
+						}}
+					>
+						<div
+							style={{
+								fontSize: "18px",
+								fontWeight: 600,
+								color: "#221d1d",
+							}}
+						>
+							Claim shared ticket
+						</div>
+						<div style={{ fontSize: "14px", color: "#636161" }}>
+							Network: <span style={{ fontWeight: 600 }}>{claimNetwork}</span>
+						</div>
+						<div style={{ fontSize: "13px", color: "#636161" }}>
+							Paste a zkSend claim link below. You can manually enter the Walrus Blob ID in the
+							<strong> Download </strong>
+							tab when you're ready to decrypt.
+						</div>
+						<div
+							style={{
+								display: "flex",
+								flexDirection: "column",
+								gap: "8px",
+							}}
+						>
+							<input
+								type="text"
+								placeholder="https://.../claim#..."
+								value={claimLinkInput}
+								onChange={(event) => {
+									setClaimLinkInput(event.target.value);
+									if (claimError) {
+										setClaimError(null);
+									}
+								}}
+								style={{
+									width: "100%",
+									borderRadius: "6px",
+									backgroundColor: "#fff",
+									border: "1px solid #f1f1f1",
+									padding: "12px 16px",
+									fontSize: "16px",
+									color: "#221d1d",
+								}}
+							/>
+							<div
+								style={{
+									display: "flex",
+									gap: "8px",
+								}}
+							>
+								<button
+									onClick={handleLoadClaimLink}
+									disabled={claimLinkLoading || !claimLinkInput.trim()}
+									style={{
+										padding: "10px 16px",
+										borderRadius: "6px",
+										border: "none",
+										backgroundColor:
+											claimLinkLoading || !claimLinkInput.trim()
+												? "#b6b6b6"
+												: "#221d1d",
+										color: "#fff",
+										fontWeight: 600,
+										cursor:
+											claimLinkLoading || !claimLinkInput.trim()
+												? "not-allowed"
+												: "pointer",
+									}}
+								>
+									{claimLinkLoading ? "Loading..." : "Load link"}
+								</button>
+								{(claimLinkInput || claimLinkState) && (
+									<button
+										type="button"
+										onClick={handleClearClaimLink}
+										disabled={claimLinkLoading}
+										style={{
+											padding: "10px 16px",
+											borderRadius: "6px",
+											border: "1px solid #e4e4e7",
+											backgroundColor: "#fff",
+											color: "#221d1d",
+											fontWeight: 500,
+											cursor: claimLinkLoading ? "not-allowed" : "pointer",
+										}}
+									>
+										Clear
+									</button>
+								)}
+							</div>
+						</div>
+
+						{claimError ? (
+							<div style={{ fontSize: "14px", color: "#dc2626" }}>{claimError}</div>
+						) : null}
+
+						{claimLinkLoading && !claimError ? (
+							<div style={{ fontSize: "14px", color: "#636161" }}>
+								Loading claim details…
+							</div>
+						) : null}
+
+						{claimLinkState && !claimLinkLoading ? (
+							<>
+								<div style={{ fontSize: "14px", color: "#636161" }}>
+									Vault owner:
+									<span style={{ fontWeight: 600, color: "#221d1d" }}>
+										{` ${formatAddress(claimLinkState.link.address)}`}
+									</span>
+								</div>
+								<div style={{ fontSize: "14px", color: "#636161" }}>
+									Assets in link: {claimAssetsText}
+								</div>
+								{ticketId ? (
+									<div style={{ fontSize: "14px", color: "#636161", wordBreak: "break-all" }}>
+										Ticket object ID:
+										<span style={{ fontWeight: 600, color: "#221d1d" }}>
+											{` ${ticketId}`}
+										</span>
+									</div>
+								) : null}
+								{alreadyClaimed ? (
+									<div style={{ fontSize: "14px", color: "#16a34a" }}>
+										Already claimed
+										{claimedBy ? ` by ${formatAddress(claimedBy)}` : ""}.
+									</div>
+								) : null}
+								{claimDigest ? (
+									<div style={{ fontSize: "14px", color: "#16a34a", wordBreak: "break-all" }}>
+										Last claim digest: {claimDigest}
+									</div>
+								) : null}
+								<div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+									<button
+										onClick={handleClaimTicket}
+										disabled={disableClaimButton}
+										style={{
+											width: "100%",
+											borderRadius: "6px",
+											backgroundColor: disableClaimButton ? "#b6b6b6" : "#221d1d",
+											color: "#fff",
+											height: "41px",
+											display: "flex",
+											alignItems: "center",
+											justifyContent: "center",
+											padding: "12px 16px",
+											border: "none",
+											fontWeight: 600,
+											cursor: disableClaimButton ? "not-allowed" : "pointer",
+											opacity: disableClaimButton ? 0.6 : 1,
+										}}
+									>
+										{claimButtonLabel}
+									</button>
+									{zkSession ? (
+										<div style={{ fontSize: "13px", color: "#636161" }}>
+											Ticket will be claimed to
+											<span style={{ fontWeight: 600, color: "#221d1d" }}>
+												{` ${formatAddress(claimerAddress)}`}
+											</span>
+											.
+										</div>
+									) : (
+										<div style={{ fontSize: "13px", color: "#636161" }}>
+											Sign in to receive the ticket in your zkLogin wallet.
+										</div>
+									)}
+								</div>
+							</>
+						) : !claimLinkLoading && !claimError ? (
+							<div style={{ fontSize: "14px", color: "#636161" }}>
+								Load a zkSend claim link to preview ticket details.
+							</div>
+						) : null}
+					</div>
 
 					{/* Upload Result */}
 					{uploadResult && (
@@ -672,11 +1154,12 @@ function App() {
 							>
 								<button
 									onClick={handleDecryptAndDownload}
-									disabled={isDecrypting || !blobIdInput || !currentAccount}
+									disabled={isDecrypting || !blobIdInput}
 									style={{
 										width: "100%",
 										borderRadius: "6px",
-										backgroundColor: "#221d1d",
+										backgroundColor:
+											isDecrypting || !blobIdInput ? "#b6b6b6" : "#221d1d",
 										color: "#fff",
 										height: "41px",
 										display: "flex",
@@ -686,13 +1169,8 @@ function App() {
 										border: "none",
 										fontWeight: "600",
 										cursor:
-											isDecrypting || !blobIdInput || !currentAccount
-												? "not-allowed"
-												: "pointer",
-										opacity:
-											isDecrypting || !blobIdInput || !currentAccount
-												? 0.33
-												: 1,
+											isDecrypting || !blobIdInput ? "not-allowed" : "pointer",
+										opacity: isDecrypting || !blobIdInput ? 0.33 : 1,
 										boxSizing: "border-box",
 									}}
 								>
@@ -705,7 +1183,7 @@ function App() {
 										textAlign: "center",
 									}}
 								>
-									Only authorized users can decrypt files.
+									Wallet 또는 zkLogin 티켓으로만 복호화가 가능합니다.
 								</div>
 							</div>
 						</div>
@@ -736,3 +1214,74 @@ function App() {
 }
 
 export default App;
+function ensureBackendFetchCredentials() {
+	if (typeof window === "undefined") {
+		return;
+	}
+	const marker = "__zkFileSendFetchPatched";
+	const globalObject = window as typeof window & Record<string, unknown>;
+	if (globalObject[marker]) {
+		return;
+	}
+
+	const targetOrigins = new Set<string>();
+	const addOrigin = (value?: string) => {
+		if (!value) return;
+		try {
+			const url = new URL(value, window.location.href);
+			targetOrigins.add(url.origin);
+		} catch (error) {
+			console.warn("Failed to parse origin for credentialed fetch", value, error);
+		}
+	};
+
+	addOrigin(BACKEND_BASE_URL);
+	addOrigin(ZKSEND_CLAIM_API);
+
+	const originalFetch = window.fetch.bind(window);
+
+	window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+		let requestUrl: string | undefined;
+		if (typeof input === "string") {
+			requestUrl = input;
+		} else if (input instanceof URL) {
+			requestUrl = input.href;
+		} else if (input instanceof Request) {
+			requestUrl = input.url;
+		} else {
+			requestUrl = undefined;
+		}
+
+		let shouldInclude = false;
+		if (requestUrl) {
+			try {
+				const origin = new URL(requestUrl, window.location.href).origin;
+				shouldInclude = targetOrigins.has(origin);
+			} catch {
+				shouldInclude = false;
+			}
+		}
+
+		if (!shouldInclude) {
+			return originalFetch(input as any, init as any);
+		}
+
+		if (input instanceof Request) {
+			const cloned = new Request(input, {
+				...init,
+				credentials: "include",
+			});
+			return originalFetch(cloned);
+		}
+
+		const nextInit: RequestInit = {
+			...init,
+			credentials: "include",
+		};
+		return originalFetch(input as any, nextInit);
+	};
+
+	globalObject[marker] = true;
+}
+
+ensureBackendFetchCredentials();
