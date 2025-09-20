@@ -1,4 +1,7 @@
 {
+	"scripts": {
+		"format": "@biomejs/biome format --write"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.4"
 	}
