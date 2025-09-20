@@ -1,7 +1,6 @@
 module myapp::content_gate_ticket {
     use std::hash;
     use std::vector;
-    use sui::object;
     use sui::tx_context;
     use sui::tx_context::TxContext;
     use sui::transfer;
@@ -27,7 +26,6 @@ module myapp::content_gate_ticket {
         id: object::UID,
         admin: address,
     }
-
     /// Create a policy and mint one ticket with hashed email set.
     /// Returns (policy_id, ticket_id) tuple.
     /// The recipient can later redistribute the ticket using standard transfers/zkSend.
@@ -41,7 +39,6 @@ module myapp::content_gate_ticket {
             admin,
         };
         let policy_id = object::id(&policy);
-        transfer::share_object(policy);
 
         let ticket_id = mint_ticket(policy_id, hashed_email, ctx);
         (policy_id, ticket_id)
@@ -74,12 +71,6 @@ module myapp::content_gate_ticket {
     /// Anyone holding a ticket tied to the policy can transfer it manually or via zkSend links.
     #[allow(lint(custom_state_change))]
     public fun transfer_ticket(t: Ticket, to: address) {
-        transfer::transfer(t, to);
-    }
-
-    /// Owner of a ticket sets the receiver email that will be required during decrypt.
-    entry fun set_ticket_email(ticket: &mut Ticket, email: vector<u8>) {
-        assert!(!ticket.email_hash_initialized, EEmailHashAlreadySet);
         ticket.hashed_receiver_email = hash::sha3_256(email);
         ticket.email_hash_initialized = true;
     }
@@ -89,7 +80,7 @@ module myapp::content_gate_ticket {
     public fun seal_approve_with_ticket(
         id: vector<u8>,
         p: &Policy,
-        t: &Ticket,
+        ticket.hashed_receiver_email = hash::sha3_256(email);
         email_input: vector<u8>
     ) {
         let same_policy = t.policy_id == object::id(p);
@@ -99,12 +90,8 @@ module myapp::content_gate_ticket {
         let expected = &t.hashed_receiver_email;
         let provided = hash::sha3_256(email_input);
         let matches = bytes_equal(expected, &provided);
-        assert!(matches, EEmailHashMismatch);
 
         let _ = id;
-    }
-
-    fun bytes_equal(a: &vector<u8>, b: &vector<u8>): bool {
         if (vector::length(a) != vector::length(b)) {
             return false
         };
