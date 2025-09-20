@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 
 import "@mysten/dapp-kit/dist/index.css";
+import "./styles/dapp-kit-modal-override.css";
 
 const queryClient = new QueryClient();
 
@@ -53,12 +54,6 @@ const customTheme: ThemeVars = {
 		body: "#221d1d",
 		bodyMuted: "#636161",
 		bodyDanger: "#ff794d",
-	},
-	radii: {
-		small: "50px",
-		medium: "50px",
-		large: "50px",
-		xlarge: "50px",
 	},
 	shadows: {
 		primaryButton: "0 0 0 0 transparent",
