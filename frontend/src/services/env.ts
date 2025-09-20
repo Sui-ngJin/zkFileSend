@@ -11,6 +11,19 @@ export const POLICY_ID = import.meta.env.VITE_POLICY_ID;
 export const CONTENT_ID_HEX =
 	import.meta.env.VITE_CONTENT_ID_HEX || "6a6f686e5f646f65";
 
+// Backend integration
+export const BACKEND_BASE_URL =
+	import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:3001";
+export const ZKSEND_CLAIM_API =
+	import.meta.env.VITE_ZKSEND_CLAIM_API || BACKEND_BASE_URL;
+export const ZKSEND_NETWORK = (
+	import.meta.env.VITE_ZKSEND_NETWORK || NETWORK
+) as typeof NETWORK;
+
+// Misc
+export const CLOCK_OBJECT_ID =
+	import.meta.env.VITE_CLOCK_OBJECT_ID || "0x6";
+
 // Seal server configuration
 export const SEAL_SERVER_IDS = (import.meta.env.VITE_SEAL_SERVER_IDS || "")
 	.split(",")
