@@ -97,13 +97,6 @@ class SponsorService {
 			await this.keypair.signTransaction(cached.txBytes)
 		).signature;
 
-		console.info("[sponsor] submitting signatures", {
-			claimerSignaturePreview: claimerSignature.slice(0, 16),
-			sponsorSignaturePreview: sponsorSignature.slice(0, 16),
-			claimerSignatureLength: claimerSignature.length,
-			sponsorSignatureLength: sponsorSignature.length,
-		});
-
 		const txBase64 = toBase64(cached.txBytes);
 		const execution = await this.client.executeTransactionBlock({
 			transactionBlock: txBase64,
