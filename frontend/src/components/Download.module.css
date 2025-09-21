@@ -1,0 +1,1002 @@
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:ital,wght@0,400;0,500;0,600;0,700&display=swap');
+
+.downloadContainer {
+  min-height: 100vh;
+  background-color: #ffffff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Earth Background */
+.earthBackground {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Top Right Google Sign In */
+.topRightSignIn {
+  position: absolute;
+  top: 100px;
+  right: 40px;
+  z-index: 10;
+}
+
+.topRightGoogleButton {
+  height: 40px;
+  border-radius: 6px;
+  background-color: #221d1d;
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  padding: 0 16px;
+}
+
+.topRightGoogleButton:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.topRightGoogleButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.topRightGoogleButton.signing {
+  background-color: #333;
+}
+
+.earthIcon {
+  width: 1512px !important;
+  height: 932px !important;
+  object-fit: contain;
+  opacity: 1;
+    position: absolute;
+}
+
+/* Main Content */
+.mainContent {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+  padding: 100px 40px 60px 40px;
+}
+
+/* Hero Section */
+.heroSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  color: #221d1d;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 120%;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 120%;
+  letter-spacing: -0.02em;
+  color: #636161;
+}
+
+.subtitle p {
+  margin: 0;
+}
+
+/* Transfer Section */
+.transferSection {
+  width: 100%;
+  max-width: 500px;
+}
+
+.transferCard {
+  background-color: #fff;
+  border-radius: 12px;
+  border: 1px solid #ebebeb;
+  padding: 24px;
+  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #221d1d;
+  margin: 0;
+}
+
+.loadingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #00D4A2;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.signInPrompt {
+  color: #636161;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.signInPrompt p {
+  margin: 0;
+}
+
+/* Google Sign In Button */
+.googleSignInButton {
+  width: 100%;
+  height: 48px;
+  border-radius: 6px;
+  background-color: #221d1d;
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.googleSignInButton:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.googleSignInButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.googleSignInButton.signing {
+  background-color: #333;
+}
+
+.googleIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.spinnerIcon {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.disclaimer {
+  font-size: 14px;
+  color: #b6b6b6;
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Loading Indicator */
+.loadingIndicator {
+  display: none;
+}
+
+
+/* Footer */
+.footer {
+  position: relative;
+  z-index: 1;
+  color: #b6b6b6;
+  font-size: 14px;
+  text-align: center;
+  padding: 40px;
+  margin-top: auto;
+}
+
+/* Development Controls */
+.devControls {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.devControls button {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.devControls button:hover {
+  background: #f5f5f5;
+}
+
+/* Content Section */
+.contentSection {
+  width: 100%;
+  max-width: 500px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #ebebeb;
+  padding: 32px;
+  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Transfer Info */
+.transferInfo {
+  background-color: #fafafa;
+  border-radius: 8px;
+  padding: 24px;
+  border: 1px solid #ebebeb;
+  position: relative;
+}
+
+.transferInfo::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #00D4A2;
+}
+
+.transferInfo h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #221d1d;
+}
+
+.transferDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.transferItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.transferItem label {
+  font-size: 14px;
+  color: #636161;
+  font-weight: 500;
+}
+
+.transferItem span {
+  font-size: 14px;
+  color: #221d1d;
+  font-weight: 500;
+}
+
+.fileSize {
+  color: #636161 !important;
+  font-weight: 400 !important;
+  margin-left: 8px;
+}
+
+.disclaimer {
+  font-size: 14px;
+  color: #636161;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.verificationNote {
+  font-size: 14px;
+  color: #636161;
+  margin-bottom: 16px;
+}
+
+.link {
+  color: #00D4A2;
+  text-decoration: underline;
+}
+
+/* Buttons */
+.signInButton {
+  width: 100%;
+  height: 48px;
+  background-color: #221d1d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.signInButton:hover {
+  background-color: #333;
+}
+
+.downloadButton {
+  width: 100%;
+  height: 48px;
+  background-color: #00D4A2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.downloadButton:hover {
+  background-color: #00BF93;
+}
+
+.unauthorizedButton {
+  width: 100%;
+  height: 48px;
+  background-color: #FF6B6B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: not-allowed;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.tryAgainButton {
+  width: 100%;
+  height: 48px;
+  background-color: #221d1d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.tryAgainButton:hover {
+  background-color: #333;
+}
+
+.authNote {
+  font-size: 14px;
+  color: #636161;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Complete Section */
+.completeSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  background-color: #00D4A2;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.fileIcon {
+  width: 40px;
+  height: 40px;
+  background-color: white;
+  border-radius: 6px;
+  position: relative;
+}
+
+.fileIcon::after {
+  content: '🔒';
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background-color: #FFA500;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.completeSection h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #221d1d;
+}
+
+.downloadDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.downloadItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.downloadItem label {
+  font-size: 14px;
+  color: #636161;
+  font-weight: 500;
+}
+
+.downloadItem span {
+  font-size: 14px;
+  color: #221d1d;
+  font-weight: 500;
+}
+
+.blockchainLink {
+  font-size: 14px;
+  color: #636161;
+  line-height: 1.4;
+}
+
+/* Frame10 (Checking) Styles - Updated from Figma */
+.frameParent {
+  width: 100%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  background-color: #fbfaf9;
+  border: 1px solid #ebebeb;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 32px;
+  gap: 24px;
+  text-align: left;
+  font-size: 14px;
+  color: #636161;
+  font-family: Pretendard;
+}
+
+.transferInformationParent {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.transferInformation {
+  align-self: stretch;
+  position: relative;
+  font-weight: 500;
+}
+
+.frameWrapper {
+  align-self: stretch;
+  flex: 1;
+  border-radius: 6px;
+  background-color: #fff;
+  border: 1px solid #f1f1f1;
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+}
+
+.signInToVerifyAndDownloadWrapper {
+  align-self: stretch;
+  border-radius: 6px;
+  background-color: #fff;
+  border: 1px solid #f1f1f1;
+  box-sizing: border-box;
+  height: 102px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.signInToVerifyAndDownloadWrapper:hover {
+  background-color: #f8f8f8;
+  border-color: #e1e1e1;
+  transform: translateY(-1px);
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.signInTo {
+  position: relative;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Checking Spinner Section */
+.checkingSpinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.checkingSpinner {
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+.checkingText {
+  font-size: 14px;
+  font-weight: 500;
+  color: #636161;
+  text-align: center;
+}
+
+/* Frame10 CSS - Figma generated */
+.frameGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0px 0px;
+  gap: 24px;
+  color: #b6b6b6;
+}
+
+.frameContainer {
+  width: 400px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+}
+
+.senderParent {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  border-radius: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+  color: #b6b6b6;
+  font-family: Pretendard;
+}
+
+.sender {
+  position: relative;
+  font-weight: 600;
+}
+
+.xc377fd6a {
+  position: relative;
+  font-size: 16px;
+  text-decoration: underline;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  color: #221d1d;
+}
+
+.fileParent {
+  border-radius: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+}
+
+.frameParent2 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 16px;
+  color: #221d1d;
+}
+
+.parent {
+  display: flex;
+  align-items: flex-start;
+  max-width: 200px;
+}
+
+.div {
+  flex: 1;
+  position: relative;
+  letter-spacing: -0.02em;
+  line-height: 135%;
+  font-weight: 500;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.9;
+  max-width: 230px;
+}
+
+.png {
+  position: relative;
+  letter-spacing: -0.02em;
+  line-height: 135%;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+.kbWrapper {
+  display: flex;
+  align-items: flex-start;
+  font-size: 14px;
+  color: #636161;
+}
+
+.kb {
+  position: relative;
+  line-height: 135%;
+}
+
+.zkfilesendDoesNotGuaranteeParent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 16px;
+  color: #636161;
+}
+
+.zkfilesendDoesNotContainer {
+  align-self: stretch;
+  position: relative;
+  line-height: 125%;
+  font-weight: 500;
+}
+
+.zkfilesendDoesNotGuarantee {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  padding-left: 21px;
+}
+
+.youCanViewContainer {
+  position: relative;
+  line-height: 125%;
+  font-weight: 500;
+}
+
+.blockchainExplorer {
+  text-decoration: underline;
+}
+
+.frameParent3 {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.descryptAndDownloadWrapper {
+  align-self: stretch;
+  border-radius: 6px;
+  background-color: #00d4a2;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.onlyTheAuthorizedReceiverWrapper {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #b6b6b6;
+}
+
+.checkingTheEncryptedFileParent {
+  align-self: stretch;
+  border-radius: 6px;
+  background-color: #fff;
+  border: 1px solid #f1f1f1;
+  box-sizing: border-box;
+  height: 102px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  gap: 12px;
+}
+
+.checkingTheEncrypted {
+  position: relative;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.frameChild {
+  align-self: stretch;
+  position: relative;
+  border-radius: 1px;
+  background-color: #ebebeb;
+  height: 1px;
+}
+
+.frameItem {
+  align-self: stretch;
+  position: relative;
+  border-radius: 1px;
+  background-color: #ebebeb;
+  height: 1px;
+}
+
+.onlyTheAuthorizedReceiverWrapper {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #b6b6b6;
+}
+
+.onlyTheAuthorized {
+  position: relative;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* FAQ Styles from Frame4 */
+.faqsParent {
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  font-size: 32px;
+}
+
+.theWorldSees {
+  position: relative;
+  letter-spacing: -0.02em;
+  line-height: 120%;
+  font-weight: 600;
+  font-size: 32px;
+  color: #221d1d;
+}
+
+.heroSectionParentFaqs {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 320px;
+  max-width: 480px;
+  font-size: 16px;
+}
+
+.faqsInner {
+  align-self: stretch;
+  border-radius: 6px;
+  background-color: #fbfaf9;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 18px 16px;
+}
+
+.whatIsZkfilesendParent {
+  width: 448px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0px;
+}
+
+.whatIsZkfilesend {
+  position: relative;
+  letter-spacing: -0.02em;
+  line-height: 120%;
+  font-weight: 500;
+}
+
+.rectangleParent {
+  width: 12px;
+  position: relative;
+  height: 12px;
+}
+
+.groupChild {
+  position: absolute;
+  top: 5px;
+  left: 0px;
+  border-radius: 1px;
+  background-color: #00d4a2;
+  width: 12px;
+  height: 2px;
+}
+
+.groupItem {
+  position: absolute;
+  top: 0px;
+  left: 7px;
+  border-radius: 1px;
+  background-color: #00d4a2;
+  width: 12px;
+  height: 2px;
+  transform: rotate(90deg);
+  transform-origin: 0 0;
+}
+
+.whyDoWeNeedThisParent {
+  align-self: stretch;
+  border-radius: 6px;
+  background-color: #fbfaf9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px;
+  gap: 0px;
+}
+
+.groupChild9 {
+  position: absolute;
+  top: 5px;
+  left: 0px;
+  border-radius: 1px;
+  background-color: #02bbff;
+  width: 12px;
+  height: 2px;
+}
+
+.groupChild10 {
+  position: absolute;
+  top: 0px;
+  left: 7px;
+  border-radius: 1px;
+  background-color: #02bbff;
+  width: 12px;
+  height: 2px;
+  transform: rotate(90deg);
+  transform-origin: 0 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .title {
+    font-size: 48px;
+  }
+
+  .subtitle {
+    font-size: 18px;
+  }
+
+  .mainContent {
+    padding: 40px 20px;
+    gap: 60px;
+  }
+
+  .transferCard {
+    padding: 24px;
+  }
+
+  .earthIcon {
+    width: 600px;
+    height: 600px;
+  }
+
+  .contentSection {
+    padding: 24px;
+  }
+
+  .frameParent {
+    width: 100%;
+  }
+}
+
+/* Frame10 specific class for DownloadChecking */
+.onlyTheAuthorizedReceiverCWrapper {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #b6b6b6;
+}
+
+.onlyTheAuthorized {
+  position: relative;
+  font-weight: 500;
+}

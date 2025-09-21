@@ -1,0 +1,34 @@
+/* dApp Kit ConnectModal 크기 고정 */
+[data-sui-modal] {
+  max-width: 320px !important;
+  width: 320px !important;
+  min-width: 320px !important;
+    background-color: #02bbff;
+}
+
+/* 모달 컨텐츠 영역도 제한 */
+[data-sui-modal] > div {
+  max-width: 320px !important;
+  width: 100% !important;
+}
+
+/* 지갑 리스트 컨테이너 */
+[data-sui-modal] [data-dapp-kit-modal] {
+  max-width: 320px !important;
+  width: 100% !important;
+}
+
+/* 모달이 반응형으로 커지는 것을 방지 */
+@media (min-width: 768px) {
+  [data-sui-modal] {
+    max-width: 320px !important;
+    width: 320px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  [data-sui-modal] {
+    max-width: 320px !important;
+    width: 320px !important;
+  }
+}

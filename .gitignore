@@ -13,3 +13,5 @@ yarn-error.log*
 /.idea/git_toolbox_prj.xml
 
 /**/.env
+
+/**/dist

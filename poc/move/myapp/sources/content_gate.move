@@ -1,8 +1,8 @@
 module myapp::content_gate_ticket {
     use std::hash;
     use std::vector;
-    use sui::clock;
     use sui::object;
+    use sui::tx_context;
     use sui::tx_context::TxContext;
     use sui::transfer;
 
@@ -19,78 +19,52 @@ module myapp::content_gate_ticket {
         id: object::UID,
         policy_id: object::ID,
         hashed_receiver_email: vector<u8>,
-        email_hash_initialized: bool,
     }
 
     /// Shared policy binding the Seal approval rules to every minted ticket.
     struct Policy has key {
         id: object::UID,
         admin: address,
-        open_after_ms: u64,
     }
-
-    /// Create a policy and mint `ticket_count` tickets for the designated recipient.
-    /// The recipient can later redistribute the tickets using standard transfers/zkSend.
+    /// Create a policy and mint one ticket with hashed email set.
+    /// Returns (policy_id, ticket_id) tuple.
+    /// The recipient can later redistribute the ticket using standard transfers/zkSend.
     public fun new_policy(
         admin: address,
-        ticket_recipient: address,
-        ticket_count: u64,
+        hashed_email: vector<u8>,
         ctx: &mut TxContext
-    ) {
-        assert!(ticket_count > 0, EZeroTickets);
-
+    ): (object::ID, object::ID) {
         let policy = Policy {
             id: object::new(ctx),
             admin,
-            open_after_ms: 0,
         };
         let policy_id = object::id(&policy);
         transfer::share_object(policy);
 
-        mint_tickets_internal(policy_id, ticket_recipient, ticket_count, ctx);
+        let ticket_id = mint_ticket(policy_id, hashed_email, ctx);
+        (policy_id, ticket_id)
     }
 
     fun assert_admin(p: &Policy, caller: address) {
         assert!(p.admin == caller, ENotAdmin);
     }
 
-    /// Convenience helper for the admin to mint additional tickets later on.
-    public fun mint_tickets(
-        p: &Policy,
-        caller: address,
-        recipient: address,
-        count: u64,
-        ctx: &mut TxContext
-    ) {
-        assert!(count > 0, EZeroTickets);
-        assert_admin(p, caller);
-        let policy_id = object::id(p);
-        mint_tickets_internal(policy_id, recipient, count, ctx);
-    }
-
-    fun mint_tickets_internal(
+    /// Mint a single ticket with email hash set for a specific policy.
+    /// Returns the ID of the created ticket.
+    public fun mint_ticket(
         policy_id: object::ID,
-        recipient: address,
-        count: u64,
+        hashed_email: vector<u8>,
         ctx: &mut TxContext
-    ) {
-        let i = 0u64;
-        while (i < count) {
-            let ticket = Ticket {
-                id: object::new(ctx),
-                policy_id,
-                hashed_receiver_email: vector::empty<u8>(),
-                email_hash_initialized: false,
-            };
-            transfer::transfer(ticket, recipient);
-            i = i + 1;
+    ): object::ID {
+        let ticket = Ticket {
+            id: object::new(ctx),
+            policy_id,
+            hashed_receiver_email: hashed_email,
         };
-    }
-
-    /// Admin can adjust the optional time lock (0 disables the gate).
-    public fun set_open_after_ms(p: &mut Policy, caller: address, t: u64) {
-        assert_admin(p, caller);
-        p.open_after_ms = t;
+        let ticket_id = object::id(&ticket);
+        let sender = tx_context::sender(ctx);
+        transfer::transfer(ticket, sender);
+        ticket_id
     }
 
     /// Anyone holding a ticket tied to the policy can transfer it manually or via zkSend links.
@@ -99,31 +73,19 @@ module myapp::content_gate_ticket {
         transfer::transfer(t, to);
     }
 
-    /// Owner of a ticket sets the receiver email that will be required during decrypt.
-    entry fun set_ticket_email(ticket: &mut Ticket, email: vector<u8>) {
-        assert!(!ticket.email_hash_initialized, EEmailHashAlreadySet);
-        ticket.hashed_receiver_email = hash::sha3_256(email);
-        ticket.email_hash_initialized = true;
-    }
-
     /// Seal verification hook. The dry-run call confirms the ticket matches the policy
     /// and (optionally) the timelock has elapsed. The actual blob id is unused.
     public fun seal_approve_with_ticket(
         id: vector<u8>,
         p: &Policy,
         t: &Ticket,
-        clk: &clock::Clock,
         email_input: vector<u8>
     ) {
-        if (p.open_after_ms > 0) {
-            assert!(clock::timestamp_ms(clk) >= p.open_after_ms, ENoAccess);
-        };
         let same_policy = t.policy_id == object::id(p);
         assert!(same_policy, EBadTicket);
 
-        assert!(t.email_hash_initialized, EEmailHashNotSet);
         let expected = &t.hashed_receiver_email;
-        let provided = hash::sha3_256(email_input);
+        let provided = hash::sha2_256(email_input);
         let matches = bytes_equal(expected, &provided);
         assert!(matches, EEmailHashMismatch);
 

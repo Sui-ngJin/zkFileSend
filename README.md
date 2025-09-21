@@ -1,71 +1,76 @@
-# 참고 자료
-https://seal-docs.wal.app/UsingSeal/
-https://seal-docs.wal.app/Pricing/#verified-key-servers
+# zkFileSend
 
-# 현재 구조 요약
-- 하나의 Walrus Blob을 Seal로 암호화해 저장
-- `content_gate_ticket` 모듈이 1 Policy : N Ticket 구조를 제공
-- 티켓은 NFT 형태로 발행되어 Sui Wallet/zkSend 로 양도 가능
-- 티켓 소유자가 `fetch:ticket` 스크립트로 복호화 권한을 획득
-
-## 🚀 실행 순서
-
-1. **의존성 설치**
-```
-npm i
-cp .env.example .env
-# SUI_SECRET_KEY, NETWORK, SEAL_SERVER_IDS 등 환경 변수 입력
-```
-
-2. **Move 패키지 배포**
-```
-npm run publish
-```
-
-3. **Policy 생성 + 초기 티켓 발행**
-```
-# .env에 TICKET_COUNT, TICKET_RECIPIENT 등 설정
-npm run policy:ticket
-# 콘솔에 POLICY_ID, TICKET_IDS 출력
-```
-
-4. **추가 티켓 발행 (선택)**
-```
-# TICKET_MINT_COUNT, TICKET_RECIPIENT 설정 후 실행
-npm run ticket:mint
-```
-
-5. **암호화 + 업로드**
-```
-npm run encrypt:upload
-# 결과 BLOB_ID를 .env에 기록
-```
-
-6. **티켓 배포**
-```
-# 직접 전송
-npm run ticket:transfer
-
-# 또는 Sui Wallet에서 zkSend 링크 생성 후 공유
-```
-
-7. **복호화 테스트**
-```
-# 수신자가 TICKET_ID, BLOB_ID 설정
-npm run fetch:ticket
-```
+> End-to-End Encrypted Decentralized File Transfer using Sui Frameworks
 
 ---
 
-## 🧪 팁 & 하드닝
-- zkSend 링크는 HTTPS 등의 안전한 채널로 전달하세요.
-- `OPEN_AFTER_MS`로 타임락을 적용할 수 있습니다 (0이면 비활성).
-- 다중 운영자를 고려하면 Policy `admin`을 멀티시그/DAO 객체로 교체하세요.
-- `mint_tickets` 실행 시 잘못된 recipient를 지정하면 복구가 어려우므로 주의가 필요합니다.
+## Overview
+
+`zkFileSend` combines multiple frameworks in the **Sui ecosystem** to build a fully decentralized, end-to-end encrypted file transfer system.  
+Users can safely send and receive files without relying on centralized intermediaries.
+
+- Problem: Hacks targeting customer data — and even unauthorized surveillance by tech companies — are still happening today. For confidential files, use an end-to-end encrypted file transfer system where only the sender and the authorized receiver can access the data.
+- Solution: zkFileSend runs on the Sui blockchain, leveraging Walrus, Seal, zkLogin, and zkSend to enable fully end-to-end encrypted file transfers. Files are encrypted so that only the authorized receiver chosen by the sender can open and download them after passing an access check.
+- Impact: Only the sender and the authorized receiver can access the file — no one else can see it, not even Sui/Walrus validators.
+
+There are two types of users:
+
+1. **File Sender**  
+   - Encrypts the file and uploads it to decentralized storage.  
+   - Generates a claimable link that allows the recipient to decrypt the file.  
+
+2. **File Receiver**  
+   - Downloads the encrypted file from decentralized storage.  
+   - Decrypts the file after passing authorization checks.  
 
 ---
 
-## 📓 메모
-- 티켓은 `policy_id`를 포함하므로 잘못된 정책으로 Dry-Run을 시도하면 `EBadTicket`으로 중단됩니다.
-- Seal SessionKey 는 현재 Ed25519 서명자를 사용하며 실제 zkLogin 흐름을 구현하려면 세션 키 교체가 필요합니다.
-- Walrus Blob 인증이 지연되면 수 분 뒤 복호화를 재시도하세요.
+## Technologies Used
+
+- **[Walrus](https://github.com/MystenLabs/walrus)** → Decentralized blob storage.  
+- **[Seal](https://seal-docs.wal.app/)** → Encryption/decryption key and access policy framework.  
+- **Sui Move Contracts** → Manage Seal decryption policies on-chain (`content_gate_keeper` package).  
+- **[zkSend](https://github.com/MystenLabs/zkSend)** → Generates claimable links for ticket objects.  
+- **[zkLogin](https://arxiv.org/abs/2401.11735)** → Simplifies onboarding for recipients without a Sui wallet.  
+
+---
+
+## Process
+
+### File Sender Flow
+
+1. Connect Sui wallet.  
+2. Upload file to the client app and specify recipient’s email.  
+3. Call `new_policy` in the Move package `content_gate_keeper` to create:  
+   - A **policy object**.  
+   - A **ticket object** bound to that policy.  
+4. Generate a **zkSend link** from the ticket object ID and share it off-chain.  
+
+![File Sender Flow](./file-sender-flow.png)
+
+---
+
+### File Receiver Flow
+
+1. Receive the zkSend link off-chain and click it.  
+2. App launches and performs **zkLogin** (if user has no Sui wallet).  
+3. Claim the ticket object via **zkSend**.  
+4. Run **Seal Challenge**:  
+   - Verify the recipient owns the ticket object.  
+   - Ensure the hashed email in the ticket matches the zkLogin email hash.  
+5. Upon success:  
+   - Download the encrypted file from **Walrus**.  
+   - Decrypt using Seal to obtain the original file.  
+
+![File Receiver Flow](./receiver-flow.png)
+
+---
+
+## Architecture
+
+- **Sender:** Uploads → Creates policy/ticket → Issues zkSend link.  
+- **Receiver:** Claims ticket → Passes Seal challenge → Downloads & decrypts.  
+- **Smart Contract Layer:** `content_gate_keeper` manages access policies.  
+- **Storage Layer:** Walrus stores encrypted blobs.  
+- **Authentication Layer:** zkLogin ensures easy onboarding with existing accounts.
+

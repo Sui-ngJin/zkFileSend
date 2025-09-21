@@ -1,155 +1,450 @@
 @import url('https://fonts.googleapis.com/css2?family=Pretendard:ital,wght@0,500;0,600;0,700&display=swap');
 
 .header {
-  width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  backdrop-filter: blur(16px);
-  background-color: rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 32px;
-  box-sizing: border-box;
-  gap: 0px;
-  text-align: left;
-  font-size: 16px;
-  color: #221d1d;
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  z-index: 10;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(16px);
+    background-color: rgba(255, 255, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px;
+    box-sizing: border-box;
+    gap: 0px;
+    text-align: left;
+    font-size: 16px;
+    color: #221d1d;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    z-index: 100;
 }
 
 .zkfilesendParent {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 0;
-  font-size: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 0;
+    font-size: 24px;
 }
 
 .zkfilesend {
-  position: relative;
-  letter-spacing: -0.02em;
-  font-weight: 700;
+    position: relative;
+    letter-spacing: -0.02em;
+    font-weight: 700;
 }
 
 .pushButton {
-  box-shadow: 0px 0.5px 2.5px rgba(0, 0, 0, 0.3), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
-  border-radius: 5px;
-  background-color: #fff;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 7px;
-  text-align: center;
-  font-size: 13px;
-  color: rgba(0, 0, 0, 0.85);
+    box-shadow: 0px 0.5px 2.5px rgba(0, 0, 0, 0.3), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+    background-color: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 7px;
+    text-align: center;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.85);
+}
+
+/* Google Sign In Button for Header */
+.googleSignInButton {
+    height: 40px;
+    border-radius: 6px;
+    background-color: #221d1d;
+    color: #fff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    padding: 0 16px;
+}
+
+.googleSignInButton:hover {
+    background-color: #333;
+}
+
+.googleIcon {
+    width: 16px;
+    height: 16px;
+}
+
+.spinnerIcon {
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.googleSignInButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .label {
-  position: relative;
-  line-height: 16px;
+    position: relative;
+    line-height: 16px;
 }
 
 .signInWrapper {
-  border-radius: 50px;
-  background-color: #221d1d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  z-index: 1;
-  color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
 }
 
-/* ConnectButton 크기 강제 조정 */
+/* Sign in button (disconnected state) - 피그마 CSS */
 .signInWrapper :global(button) {
-  padding: 0 !important;
-  margin: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  letter-spacing: -0.02em !important;
-  color: #fff !important;
-  min-height: unset !important;
-  height: auto !important;
+    border-radius: 50px !important;
+    background-color: #221d1d !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 8px 16px !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    font-size: 16px !important;
+    color: #fff !important;
+    font-family: 'Pretendard' !important;
+    border: none !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.02em !important;
+    min-height: unset !important;
+    height: auto !important;
+}
+
+/* Connected wallet container */
+.connectedWalletContainer {
+    position: relative;
+}
+
+/* Connected wallet display - 피그마 스펙에 맞춤 */
+.connectedWallet {
+    border-radius: 50px;
+    background-color: #fff;
+    box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
+    border: 1px solid #ebebeb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 16px 8px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 16px;
+    color: #221d1d;
+    font-family: 'Pretendard';
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    height: 35px;
+    width: 165px;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.address {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.disclosureButton {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.disclosureButton img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Account Dropdown - 피그마 스펙에 맞춤 */
+.accountDropdown {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 400px;
+    height: 183px;
+    box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    background-color: #fff;
+    border: 1px solid #ebebeb;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 8px 16px;
+    gap: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: #007aff;
+    font-family: 'Pretendard';
+    z-index: 1000;
+}
+
+.dropdownFrameParent {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.frameGroup {
+    align-self: stretch;
+    border-radius: 6px;
+    background-color: #f1f1f1;
+    border: 1px solid #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    position: relative;
+    gap: 0px;
+}
+
+.toggleButtonParent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 0;
+}
+
+.toggleButtonImg {
+    width: auto;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.pushButtonImg {
+    width: auto;
+    height: auto;
+    flex-shrink: 0;
+}
+
+.frameContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    text-align: left;
+    font-size: 16px;
+    color: #221d1d;
+}
+
+.lilPudgy6237Parent {
+    display: flex;
+    align-items: flex-start;
+    max-width: 200px;
+}
+
+.ifTheFile {
+    flex: 1;
+    position: relative;
+    letter-spacing: -0.02em;
+    line-height: 135%;
+    font-weight: 500;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.9;
+    max-width: 230px;
+}
+
+.png {
+    position: relative;
+    letter-spacing: -0.02em;
+    line-height: 135%;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.9;
+}
+
+.toParent {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 14px;
+    color: #636161;
+}
+
+.to {
+    position: relative;
+    line-height: 135%;
+    font-weight: 500;
+}
+
+.dropdownDiv {
+    position: relative;
+    line-height: 135%;
+    font-family: Geist;
+}
+
+.dropdownLabel {
+    position: relative;
+    line-height: 16px;
+    font-weight: 500;
+}
+
+.sAgoParent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1;
+    font-size: 14px;
+    color: #636161;
+}
+
+.sAgo {
+    position: relative;
+    font-weight: 500;
+}
+
+.frameDiv {
+    align-self: stretch;
+    border-radius: 6px;
+    border: 1px solid #f1f1f1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    gap: 0px;
+    color: rgba(0, 0, 0, 0.85);
+}
+
+.pushButtonParent {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pushButtonReceived {
+    box-shadow: 0px 0.5px 2.5px rgba(0, 0, 0, 0.3), 0px 0px 0px 0.5px rgba(0, 0, 0, 0.05);
+    border-radius: 5px;
+    background-color: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 7px;
+}
+
+.dAgoParent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #636161;
+}
+
+.signOut {
+    position: relative;
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+    color: #b6b6b6;
+    text-align: center;
+    cursor: pointer;
+    align-self: stretch;
 }
 
 
 .signIn {
-  position: relative;
-  letter-spacing: -0.02em;
-  font-weight: 500;
+    position: relative;
+    letter-spacing: -0.02em;
+    font-weight: 500;
 }
 
 .frameParent {
-  margin: 0 !important;
-  position: absolute;
-  top: calc(50% - 23.5px);
-  left: calc(50% - 92px);
-  box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
-  border-radius: 200px;
-  background-color: #fbfaf9;
-  border: 1px solid #ebebeb;
-  display: flex;
-  align-items: center;
-  padding: 6px;
-  z-index: 2;
+    margin: 0 !important;
+    position: absolute;
+    top: calc(50% - 23.5px);
+    left: calc(50% - 92px);
+    box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.06);
+    border-radius: 200px;
+    background-color: #fbfaf9;
+    border: 1px solid #ebebeb;
+    display: flex;
+    align-items: center;
+    padding: 6px;
+    z-index: 2;
 }
 
 .sendWrapper {
-  border-radius: 50px;
-  background-color: #ebebeb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+    border-radius: 50px;
+    background-color: #ebebeb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .sendWrapperInactive {
-  border-radius: 50px;
-  background-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: #b6b6b6;
+    border-radius: 50px;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: #b6b6b6;
 }
 
 .downloadWrapper {
-  border-radius: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  color: #b6b6b6;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    color: #b6b6b6;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
 .downloadWrapperActive {
-  border-radius: 50px;
-  background-color: #ebebeb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: #221d1d;
+    border-radius: 50px;
+    background-color: #ebebeb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: #221d1d;
 }
 
 .sendWrapper:hover,
 .sendWrapperInactive:hover,
 .downloadWrapper:hover,
 .downloadWrapperActive:hover {
-  background-color: #ebebeb;
+    background-color: #ebebeb;
 }
