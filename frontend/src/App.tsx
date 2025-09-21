@@ -138,6 +138,7 @@ function App() {
 				setLink,
 			);
       setSigningStep(5)
+      setShowFileSent(true)
 		} catch (error) {
 			console.error("Upload failed:", error);
 			setAlertMessage({
@@ -376,7 +377,7 @@ function App() {
 
           {/* Main Form */}
           {showFileSent ? (
-            <FileSent onSendAnother={handleReset} />
+            <FileSent onSendAnother={handleReset} link={link} />
           ) : currentTab === 'send' ? (
             selectedFile ? (
               /* Sending Selected State */

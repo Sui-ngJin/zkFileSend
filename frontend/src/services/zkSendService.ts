@@ -36,15 +36,7 @@ export const createSendTicketLink = async (
 	// 클레임 zklink
 	console.log('zkSendLink:' + url);
 
-	signAndExecuteTransaction({
+	await signAndExecuteTransaction({
 		transaction: tx
-	}, {
-		onSuccess: (result) => {
-			console.log(result);
-		},
-		onError: (error) => {
-			console.log(error);
-		}
 	});
-
 }
