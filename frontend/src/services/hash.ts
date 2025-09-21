@@ -1,17 +1,17 @@
-import { createHash } from 'crypto';
-
 /**
  * 이메일 주소를 SHA-256으로 해시 처리하여 vector<u8> 형태로 반환
- * Node.js 환경에서 crypto 모듈 사용
+ * 브라우저 환경에서 Web Crypto API 사용
  */
-export function hashEmailToVector(email: string): Uint8Array {
+export async function hashEmailToVector(email: string): Promise<Uint8Array> {
 	// 이메일 주소 정규화 (소문자로 변환, 공백 제거)
 	const normalizedEmail = email.trim().toLowerCase();
 
-	// SHA-256 해시 생성
-	const hash = createHash('sha256');
-	hash.update(normalizedEmail);
-	const hashBuffer = hash.digest();
+	// TextEncoder로 문자열을 바이트 배열로 변환
+	const encoder = new TextEncoder();
+	const data = encoder.encode(normalizedEmail);
+
+	// SHA-256 해시 생성 (Web Crypto API 사용)
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
 
 	return new Uint8Array(hashBuffer);
 }

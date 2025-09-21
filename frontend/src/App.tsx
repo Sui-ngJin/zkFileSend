@@ -1,11 +1,16 @@
-import { useState } from 'react'
-import { useCurrentAccount, useSignAndExecuteTransaction, useSignPersonalMessage } from '@mysten/dapp-kit'
-import { sealService } from './services/sealService'
-import Header from './components/Header'
-import { FAQ } from './components/FAQ'
-import SendingSelected from './components/SendingSelected'
-import FileSent from './components/FileSent'
-import uploadIcon from './assets/upload.svg'
+import { useState } from "react";
+import {
+	useCurrentAccount,
+	useSignAndExecuteTransaction,
+	useSignPersonalMessage,
+} from "@mysten/dapp-kit";
+import { sealService } from "./services/sealService";
+import Header from "./components/Header";
+import { FAQ } from "./components/FAQ";
+import uploadIcon from "./assets/upload.svg";
+import { createSendTicketLink } from "./services/zkSendService";
+import SendingSelected from "./components/SendingSelected";
+import FileSent from "./components/FileSent";
 
 // File type detection based on magic bytes
 function detectFileType(data: Uint8Array): string {
@@ -41,21 +46,31 @@ function detectFileType(data: Uint8Array): string {
 }
 
 function App() {
-  const currentAccount = useCurrentAccount()
-  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage()
-  const [receiverAddress, setReceiverAddress] = useState('')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadResult, setUploadResult] = useState<{ blobId: string; encryptedSize: number } | null>(null)
-  const [alertMessage, setAlertMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null)
-  const [currentTab, setCurrentTab] = useState<'send' | 'download'>('send')
-  const [showFileSent, setShowFileSent] = useState(false)
-  const [signingStep, setSigningStep] = useState(0)
+	const currentAccount = useCurrentAccount();
+	const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+	const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+	const [receiverAddress, setReceiverAddress] = useState("");
+	const [selectedFile, setSelectedFile] = useState<File | null>(null);
+	const [isUploading, setIsUploading] = useState(false);
+	const [uploadResult, setUploadResult] = useState<{
+		blobId: string;
+		encryptedSize: number;
+	} | null>(null);
+	const [alertMessage, setAlertMessage] = useState<{
+		type: "error" | "success";
+		text: string;
+	} | null>(null);
+	const [currentTab, setCurrentTab] = useState<"send" | "download">("send");
 
-  // Decrypt functionality states
-  const [blobIdInput, setBlobIdInput] = useState('')
-  const [isDecrypting, setIsDecrypting] = useState(false)
+	// Decrypt functionality states
+	const [blobIdInput, setBlobIdInput] = useState("");
+	const [isDecrypting, setIsDecrypting] = useState(false);
+	// Helper function to extract IDs from transaction result
+	const [link, setLink] = useState("");
+
+	const [showFileSent, setShowFileSent] = useState(false)
+	const [signingStep, setSigningStep] = useState(0)
+
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -87,49 +102,95 @@ function App() {
       setAlertMessage({ type: 'error', text: 'Please connect your wallet first' })
       return
     }
-
-    setIsUploading(true)
-    setAlertMessage(null)
-
-    try {
-      console.log('Starting encryption and upload...')
-
-      // Step 1: Set access policy
+		setIsUploading(true);
+		setAlertMessage(null);
+		try {
+			console.log("Starting encryption and upload...");
+			
       setSigningStep(1)
-      await new Promise(resolve => setTimeout(resolve, 1500)) // Simulate delay
+      await sealService.initPolicy(
+				receiverAddress,
+				currentAccount?.address!,
+				signAndExecuteTransaction,
+			);
 
-      // Step 2: Reserve storage space
-      setSigningStep(2)
-      await new Promise(resolve => setTimeout(resolve, 1500))
 
-      // Step 3: Encrypt, upload, and send the file
-      setSigningStep(3)
-      await new Promise(resolve => setTimeout(resolve, 1500))
+			const result = await sealService.encryptAndUploadWithWallet(
+				selectedFile,
+				currentAccount?.address!,
+				signAndExecuteTransaction,
+        setSigningStep
+			);
 
-      // Step 4: Set the download link
+			if (!result) throw new Error('wtf22222')
+
+			setUploadResult(result);
+			setAlertMessage({
+				type: "success",
+				text: `File encrypted and uploaded! Blob ID: ${result.blobId}`,
+			});
+
       setSigningStep(4)
-      await new Promise(resolve => setTimeout(resolve, 1500))
-
-      const result = await sealService.encryptAndUploadWithWallet(
-        selectedFile,
-        currentAccount.address,
-        signAndExecuteTransaction
-      )
-
-      setSigningStep(5) // Completed
-      setUploadResult(result)
-      setAlertMessage({ type: 'success', text: `File encrypted and uploaded! Blob ID: ${result.blobId}` })
+			await createSendTicketLink(
+				sessionStorage.getItem('ticketId')!,
+				currentAccount.address,
+				signAndExecuteTransaction,
+				setLink,
+			);
+      setSigningStep(5)
       setShowFileSent(true)
+		} catch (error) {
+			console.error("Upload failed:", error);
+			setAlertMessage({
+				type: "error",
+				text: error instanceof Error ? error.message : "Upload failed",
+			});
+		} finally {
+			setIsUploading(false);
+		}
+	};
 
-    } catch (error) {
-      console.error('Upload failed:', error)
-      setAlertMessage({ type: 'error', text: error instanceof Error ? error.message : 'Upload failed' })
-      setSigningStep(0) // Reset on error
+	const handleDecryptAndDownload = async () => {
+		if (!blobIdInput) {
+			setAlertMessage({ type: "error", text: "Please enter Blob ID" });
+			return;
+		}
 
-    } finally {
-      setIsUploading(false)
-    }
-  }
+		if (!currentAccount) {
+			setAlertMessage({ type: "error", text: "Please connect your wallet first" });
+			return;
+		}
+
+		setIsDecrypting(true);
+		setAlertMessage(null);
+		try {
+			console.log("Starting decryption...");
+			const decryptedData = await sealService.decryptAndDownloadWithWallet(
+				blobIdInput,
+				currentAccount.address,
+				signPersonalMessage,
+			);
+
+			// Detect file type and create download link
+			const fileExtension = detectFileType(decryptedData);
+			const blob = new Blob([new Uint8Array(decryptedData)]);
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `decrypted_file_${Date.now()}${fileExtension}`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+
+			setAlertMessage({ type: "success", text: "File decrypted and downloaded successfully!" });
+		} catch (error) {
+			console.error("Decryption failed:", error);
+			setAlertMessage({ type: "error", text: error instanceof Error ? error.message : "Decryption failed" });
+		} finally {
+			setIsDecrypting(false);
+		}
+	};
 
   if (currentTab === 'download') {
     return (
@@ -144,9 +205,9 @@ function App() {
         <Header
           currentTab={currentTab}
           onTabChange={setCurrentTab}
-          onGoogleSignIn={() => console.log('Google Sign In')}
+          // onGoogleSignIn={() => console.log('Google Sign In')}
         />
-        <Download onGoogleSignIn={() => console.log('Google Sign In')} />
+        {/* <Download /> */}
       </div>
     );
   }
@@ -226,7 +287,7 @@ function App() {
       <Header
         currentTab={currentTab}
         onTabChange={setCurrentTab}
-        onGoogleSignIn={() => console.log('Google Sign In')}
+        // onGoogleSignIn={() => console.log('Google Sign In')}
       />
 
       {/* Main Content */}
@@ -316,7 +377,7 @@ function App() {
 
           {/* Main Form */}
           {showFileSent ? (
-            <FileSent onSendAnother={handleReset} />
+            <FileSent onSendAnother={handleReset} link={link} />
           ) : currentTab === 'send' ? (
             selectedFile ? (
               /* Sending Selected State */

@@ -52,11 +52,10 @@ const signer = signerFromEnvKey(SUI_SECRET_KEY);
 		change.objectType?.endsWith("::content_gate_ticket::Policy"),
 	)?.objectId;
 
-	const ticketIds = createdChanges
-		.filter((change) =>
+	const ticketId = createdChanges
+		.find((change) =>
 			change.objectType?.endsWith("::content_gate_ticket::Ticket"),
-		)
-		.map((change) => change.objectId);
+		)?.objectId;
 
 	if (!policyId) {
 		throw new Error(
@@ -64,7 +63,7 @@ const signer = signerFromEnvKey(SUI_SECRET_KEY);
 		);
 	}
 
-	if (ticketIds.length === 0) {
+	if (!ticketId) {
 		console.warn(
 			"No Ticket objects reported in response. Re-run with tracing enabled to inspect.",
 		);
@@ -72,5 +71,5 @@ const signer = signerFromEnvKey(SUI_SECRET_KEY);
 
 	console.log("RECEIVER_EMAIL =", RECEIVER_EMAIL);
 	console.log("POLICY_ID =", policyId);
-	console.log("TICKET_ID =", ticketIds[0] || "Not found");
+	console.log("TICKET_ID =", ticketId || "Not found");
 })();

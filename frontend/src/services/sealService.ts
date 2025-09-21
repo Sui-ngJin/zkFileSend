@@ -7,22 +7,23 @@ import {
 	CONTENT_ID_HEX,
 	NETWORK,
 	PACKAGE_ID,
-	POLICY_ID,
 	SEAL_SERVER_IDS,
 	SEAL_SERVER_WEIGHTS,
 	SUI_RPC,
 	WALRUS_DELETABLE,
 	WALRUS_EPOCHS,
 } from "./env";
+import { hashEmailToVector } from './hash';
 
 // Type for wallet signing functions
+// Support both callback-based mutate and Promise-based mutateAsync styles
 type SignAndExecuteTransactionFn = (
-	params: { transaction: Transaction },
+	params: { transaction: Transaction; options?: any },
 	options?: {
 		onSuccess?: (result: any) => void;
 		onError?: (error: any) => void;
 	},
-) => void;
+) => Promise<any> | void;
 type SignPersonalMessageFn = (params: {
 	message: Uint8Array;
 }) => Promise<{ signature: string }>;
@@ -44,6 +45,106 @@ export class SealService {
 		}
 	}
 
+	extractPolicyAndTicketIds = async (
+		result: any,
+	) => {
+		try {
+			const suiClient = this.suiClient;
+			// Prefer objectChanges from the wallet response if present; otherwise fetch with retry.
+			let objectChanges = result?.objectChanges as any[] | undefined;
+			console.log(1);
+			if (!objectChanges) {
+				const maxAttempts = 10;
+				for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+					try {
+						const txBlock = await suiClient.getTransactionBlock({
+							digest: result.digest,
+							options: {
+								showEffects: true,
+								showEvents: true,
+								showObjectChanges: true,
+							}
+						});
+
+						objectChanges = txBlock.objectChanges as any[] | undefined;
+						if (objectChanges && objectChanges.length) {
+							break; // success
+						}
+					} catch (e) {
+						// Ignore and retry below
+						console.error(e);
+					}
+
+					if (attempt < maxAttempts) {
+						await this.sleep(1000); // 1s delay between attempts
+					}
+				}
+			}
+
+			console.log(objectChanges);
+			if (objectChanges && objectChanges.length) {
+				const createdObjects = objectChanges.filter(
+					(change: any) => change.type === 'created'
+				);
+				console.log(2);
+
+				console.log(createdObjects);
+				// Look for Policy and Ticket objects
+				const policyObjects = createdObjects.filter(
+					(obj: any) => obj.objectType?.includes('Policy')
+				);
+
+				const ticketObjects = createdObjects.filter(
+					(obj: any) => obj.objectType?.includes('Ticket')
+				);
+
+				const policyObj = policyObjects[0] as any;
+				const ticketObj = ticketObjects[0] as any;
+
+				const policyId = policyObj?.objectId || policyObj?.packageId || policyObj?.id;
+				const ticketId = ticketObj?.objectId || ticketObj?.packageId || ticketObj?.id;
+
+				console.log('succeedded to fetch ticketid ' + ticketId);
+				sessionStorage.setItem('ticketId', ticketId);
+			}
+		} catch (error) {
+			console.error("❌ Failed to extract IDs:", error);
+		}
+	};
+
+	async initPolicy(
+		receiver: string,
+		admin: string,
+		signAndExecuteTransaction: SignAndExecuteTransactionFn,
+	) {
+		const hashedEmailBytes = await hashEmailToVector(receiver);
+		const tx = new Transaction();
+
+		tx.moveCall({
+			target: `${PACKAGE_ID}::content_gate_ticket::new_policy`,
+			arguments: [
+				tx.pure.address(admin),
+				tx.pure.vector("u8", hashedEmailBytes),
+			],
+		});
+
+		// Prefer Promise-based mutateAsync; still compatible with callback mutate
+		const maybePromise = signAndExecuteTransaction({
+			transaction: tx,
+			// Ask the wallet to return rich info so we can parse IDs directly from result
+			options: {
+				showEffects: true,
+				showEvents: true,
+				showObjectChanges: true,
+			},
+		});
+
+		if (maybePromise && typeof (maybePromise as any).then === 'function') {
+			const result = await (maybePromise as Promise<any>);
+			await this.extractPolicyAndTicketIds(result);
+		}
+	}
+
 	private initializeSealClient() {
 		try {
 			this.seal = new SealClient({
@@ -59,11 +160,16 @@ export class SealService {
 		}
 	}
 
+	private sleep(ms: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
 	async encryptAndUploadWithWallet(
 		file: File,
 		userAddress: string,
 		signAndExecuteTransaction: SignAndExecuteTransactionFn,
-	): Promise<{ blobId: string; encryptedSize: number }> {
+		setSigningStep: (step: number) => void,
+	): Promise<{ blobId: string; encryptedSize: number } | undefined> {
 		try {
 			// 파일 변환 (Uint8Array 로)
 			const arrayBuffer = await file.arrayBuffer();
@@ -99,63 +205,82 @@ export class SealService {
 			console.log("Blob flow encoded");
 
 			// 2. Register blob (지갑 서명 필요)
+			setSigningStep(2)
 			const registerTx = flow.register({
 				epochs: WALRUS_EPOCHS,
 				owner: userAddress,
 				deletable: WALRUS_DELETABLE,
 			});
 
-			return new Promise((resolve, reject) => {
-				signAndExecuteTransaction(
-					{ transaction: registerTx },
-					{
-						onSuccess: async (result) => {
-							try {
-								console.log("Register complete:", result);
-
-								// 3. Upload to storage nodes
-								await flow.upload({ digest: result.digest });
-								console.log("Upload to storage nodes complete");
-
-								// 4. Certify blob (지갑 서명 필요)
-								const certifyTx = flow.certify();
-
-								signAndExecuteTransaction(
-									{ transaction: certifyTx },
-									{
-										onSuccess: async (certifyResult) => {
-											try {
-												console.log("Certify complete:", certifyResult);
-
-												// 5. Get blob ID
-												const blobId = (await flow.getBlob()).blobId;
-												console.log("Final blob ID:", blobId);
-
-												resolve({
-													blobId,
-													encryptedSize: encryptedObject.length,
-												});
-											} catch (error) {
-												reject(error);
-											}
-										},
-										onError: (error) => {
-											console.error("Certify failed:", error);
-											reject(error);
-										},
-									},
-								);
-							} catch (error) {
-								reject(error);
-							}
-						},
-						onError: (error) => {
-							console.error("Register failed:", error);
-							reject(error);
-						},
-					},
-				);
+			// Prefer Promise-based mutateAsync; still compatible with callback mutate
+			const maybePromise = signAndExecuteTransaction({
+				transaction: registerTx,
+				// Ask the wallet to return rich info so we can parse IDs directly from result
+				options: {
+					showEffects: true,
+					showEvents: true,
+					showObjectChanges: true,
+				},
 			});
+
+			if (maybePromise && typeof (maybePromise as any).then === 'function') {
+				const result = await (maybePromise as Promise<any>);
+				
+				// 파일 업로드
+				for (let attempt = 1; attempt <= 20; attempt++) {
+					try {
+						await flow.upload({ digest: result.digest });
+						console.log("Upload to storage nodes complete");
+						break;
+					} catch (uploadError) {
+						console.warn(`Upload attempt ${attempt} failed:`, uploadError);
+						if (attempt < 20) {
+							await this.sleep(1000); // 1s delay between attempts
+						} else {
+							throw new Error(`Upload failed after ${20} attempts: ${uploadError}`);
+						}
+					}
+				}
+
+				// blob 올리는 트렌젝션
+				setSigningStep(3);
+				const certifyTx = flow.certify();
+
+				// Prefer Promise-based mutateAsync; still compatible with callback mutate
+				const maybePromise2 = signAndExecuteTransaction({
+					transaction: certifyTx,
+					// Ask the wallet to return rich info so we can parse IDs directly from result
+					options: {
+						showEffects: true,
+						showEvents: true,
+						showObjectChanges: true,
+					},
+				});
+
+				if (maybePromise2 && typeof (maybePromise2 as any).then === 'function') {
+					await (maybePromise2 as Promise<any>);
+
+					let blobId: string = '';
+					for (let attempt = 1; attempt <= 20; attempt++) {
+						try {
+							blobId = (await flow.getBlob()).blobId;
+							console.log("Final blob ID:", blobId);
+							return { blobId, encryptedSize: encryptedObject.length };
+						} catch (getBlobError) {
+							console.warn(`Get blob attempt ${attempt} failed:`, getBlobError);
+							if (attempt < 20) {
+								await this.sleep(1000); // 1s delay between attempts
+							} else {
+								throw new Error(`Get blob failed after ${20} attempts: ${getBlobError}`);
+							}
+						}
+					}
+				} else {
+					throw new Error('wtf');
+				}
+			} else {
+				throw new Error('wtf');
+			}
 		} catch (error) {
 			console.error("Encryption/upload failed:", error);
 			throw error;
@@ -212,7 +337,7 @@ export class SealService {
 					target: `${PACKAGE_ID}::content_gate::seal_approve_simple`,
 					arguments: [
 						tx.pure.vector("u8", fromHex(CONTENT_ID_HEX)),
-						tx.object(POLICY_ID),
+						// tx.object(POLICY_ID),
 						tx.pure.address(userAddress),
 						tx.object("0x6"), // &Clock
 					],

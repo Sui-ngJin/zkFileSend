@@ -7,13 +7,14 @@ import arrowImg from '../assets/arrow.svg'
 
 interface FileSentProps {
   onSendAnother: () => void;
+  link: string;
 }
 
-const FileSent: FunctionComponent<FileSentProps> = ({ onSendAnother }) => {
+const FileSent: FunctionComponent<FileSentProps> = ({ onSendAnother, link }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const copyToClipboard = useCallback(async () => {
-    const url = "https://zkfilesend.io/download/qXVNUD_nTUWV8t6r3BumYn7wStS7GAoC82SEGbSl0hU";
+    const url = link;
     try {
       await navigator.clipboard.writeText(url);
       setIsCopied(true);
@@ -21,7 +22,7 @@ const FileSent: FunctionComponent<FileSentProps> = ({ onSendAnother }) => {
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
-  }, []);
+  }, [link]);
 
   return (
     <div className={styles.frameGroup}>
@@ -83,7 +84,7 @@ const FileSent: FunctionComponent<FileSentProps> = ({ onSendAnother }) => {
         <div className={styles.httpszkfilesendiodownloadParent}>
           <div className={styles.httpszkfilesendiodownload}>
             <span>https://zkfilesend.io</span>
-            <span className={styles.downloadqxvnudNtuwv8t6r3bumy}>/download/qXVNUD_nTUWV8t6r3BumYn7wStS7GAoC82SEGbSl0hU</span>
+            <span className={styles.downloadqxvnudNtuwv8t6r3bumy}>{link}</span>
           </div>
           <div className={styles.copyWrapper} onClick={copyToClipboard}>
             <img src={isCopied ? copiedButton : copyButton} alt={isCopied ? 'Copied' : 'Copy'} />
