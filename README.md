@@ -21,13 +21,17 @@ There are two types of users:
    - Encrypts the file and uploads it to decentralized storage.  
    - Generates a claimable link that allows the recipient to decrypt the file.
 
-![alt text](2.jpg)
+<p align="center">
+  <img src="2.jpg" alt="alt text" width="600" />
+</p>
 
 2. **File Receiver** 📥  
    - Downloads the encrypted file from decentralized storage.  
    - Decrypts the file after passing authorization checks.
 
-![alt text](1.jpg)
+<p align="center">
+  <img src="1.jpg" alt="alt text" width="600" />
+</p>
 ---
 
 ## Technologies Used 🛠️
