@@ -6,6 +6,10 @@ interface FAQItem {
 	answer: string;
 }
 
+interface FAQProps {
+	accentColor?: string; // 기본값은 Send 페이지용 파란색
+}
+
 const faqData: FAQItem[] = [
 	{
 		question: "What is zkFileSend?",
@@ -37,10 +41,15 @@ const faqData: FAQItem[] = [
     answer:
       "zkLogin and zkSend bring privacy and a seamless user experience to Sui. zkLogin allows users to authenticate with familiar Web2 credentials (like Google) without compromising security, while zkSend lets users send assets with a simple link — no wallet setup required. Both leverage zero-knowledge proofs and Sui’s high-performance network to keep the process secure and smooth for end-to-end encrypted file transfers.",
   },
+  {
+    question: "Does zkFileSend charge a fee?",
+    answer:
+      "Not now. When the sender encrypts a file and uploads it to Walrus, zkFileSend will charge a fee equal to 10% of the total encryption and upload cost.",
+  },
 
 ];
 
-export function FAQ() {
+export function FAQ({ accentColor = '#02bbff' }: FAQProps = {}) {
 	const [expandedIndex, setExpandedIndex] = useState<number>(-1); // 첫 번째 항목이 기본 확장
 
 	const toggleExpand = (index: number) => {
@@ -64,12 +73,12 @@ export function FAQ() {
 							<div className={styles.iconWrapper}>
 								{expandedIndex === index ? (
 									// Minus icon (expanded)
-									<div className={styles.minusIcon} />
+									<div className={styles.minusIcon} style={{ backgroundColor: accentColor }} />
 								) : (
 									// Plus icon (collapsed)
 									<div className={styles.plusIconContainer}>
-										<div className={styles.plusIconH} />
-										<div className={styles.plusIconV} />
+										<div className={styles.plusIconH} style={{ backgroundColor: accentColor }} />
+										<div className={styles.plusIconV} style={{ backgroundColor: accentColor }} />
 									</div>
 								)}
 							</div>
