@@ -1,3 +1,5 @@
+![alt text](3.jpg)
+
 # zkFileSend 🔐
 
 > End-to-End Encrypted Decentralized File Transfer using Sui Frameworks 🔒
@@ -17,12 +19,15 @@ There are two types of users:
 
 1. **File Sender** 📤  
    - Encrypts the file and uploads it to decentralized storage.  
-   - Generates a claimable link that allows the recipient to decrypt the file.  
+   - Generates a claimable link that allows the recipient to decrypt the file.
+
+![alt text](2.jpg)
 
 2. **File Receiver** 📥  
    - Downloads the encrypted file from decentralized storage.  
-   - Decrypts the file after passing authorization checks.  
+   - Decrypts the file after passing authorization checks.
 
+![alt text](1.jpg)
 ---
 
 ## Technologies Used 🛠️
