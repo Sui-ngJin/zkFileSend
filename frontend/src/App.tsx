@@ -385,7 +385,7 @@ function App() {
           </div>
 
           {/* Alert Message */}
-          {alertMessage && (
+          {/* {alertMessage && (
             <div style={{
               width: '600px',
               padding: '12px 16px',
@@ -398,10 +398,10 @@ function App() {
             }}>
               {alertMessage.text}
             </div>
-          )}
+          )} */}
 
           {/* Upload Result */}
-          {uploadResult && (
+          {/* {uploadResult && (
             <div style={{
               width: '600px',
               padding: '16px',
@@ -422,7 +422,7 @@ function App() {
                 file.
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Main Form */}
           {showFileSent ? (
