@@ -168,6 +168,7 @@ export class SealService {
 		file: File,
 		userAddress: string,
 		signAndExecuteTransaction: SignAndExecuteTransactionFn,
+		setSigningStep: (step: number) => void,
 	): Promise<{ blobId: string; encryptedSize: number } | undefined> {
 		try {
 			// 파일 변환 (Uint8Array 로)
@@ -204,6 +205,7 @@ export class SealService {
 			console.log("Blob flow encoded");
 
 			// 2. Register blob (지갑 서명 필요)
+			setSigningStep(2)
 			const registerTx = flow.register({
 				epochs: WALRUS_EPOCHS,
 				owner: userAddress,
@@ -241,6 +243,7 @@ export class SealService {
 				}
 
 				// blob 올리는 트렌젝션
+				setSigningStep(3);
 				const certifyTx = flow.certify();
 
 				// Prefer Promise-based mutateAsync; still compatible with callback mutate

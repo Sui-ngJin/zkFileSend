@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 
 import "@mysten/dapp-kit/dist/index.css";
-import "./styles/dapp-kit-modal-override.css";
+// import "./styles/dapp-kit-modal-override.css";
 
 const queryClient = new QueryClient();
 
