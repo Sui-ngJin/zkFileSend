@@ -1,49 +1,16 @@
 import { useState } from 'react'
-import { useCurrentAccount, useSignAndExecuteTransaction, useSignPersonalMessage } from '@mysten/dapp-kit'
+import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit'
 import { sealService } from './services/sealService'
 import Header from './components/Header'
 import { FAQ } from './components/FAQ'
 import SendingSelected from './components/SendingSelected'
 import FileSent from './components/FileSent'
+import Download from './components/Download'
 import uploadIcon from './assets/upload.svg'
-
-// File type detection based on magic bytes
-function detectFileType(data: Uint8Array): string {
-  const bytes = Array.from(data.slice(0, 10))
-
-  // JPEG
-  if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
-    return '.jpg'
-  }
-
-  // PNG
-  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
-    return '.png'
-  }
-
-  // GIF
-  if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
-    return '.gif'
-  }
-
-  // PDF
-  if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
-    return '.pdf'
-  }
-
-  // ZIP
-  if (bytes[0] === 0x50 && bytes[1] === 0x4B && (bytes[2] === 0x03 || bytes[2] === 0x05)) {
-    return '.zip'
-  }
-
-  // Default to .bin if unknown
-  return '.bin'
-}
 
 function App() {
   const currentAccount = useCurrentAccount()
   const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction()
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage()
   const [receiverAddress, setReceiverAddress] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -52,10 +19,18 @@ function App() {
   const [currentTab, setCurrentTab] = useState<'send' | 'download'>('send')
   const [showFileSent, setShowFileSent] = useState(false)
   const [signingStep, setSigningStep] = useState(0)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
-  // Decrypt functionality states
-  const [blobIdInput, setBlobIdInput] = useState('')
-  const [isDecrypting, setIsDecrypting] = useState(false)
+  const handleGoogleSignIn = async () => {
+    setIsSigningIn(true)
+    try {
+      // Simulate Google sign-in process
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      console.log('Google Sign In completed')
+    } finally {
+      setIsSigningIn(false)
+    }
+  }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -71,6 +46,7 @@ function App() {
     setAlertMessage(null)
     setShowFileSent(false)
     setSigningStep(0)
+    setIsSigningIn(false)
   }
 
   const clearEmailInput = () => {
@@ -144,9 +120,10 @@ function App() {
         <Header
           currentTab={currentTab}
           onTabChange={setCurrentTab}
-          onGoogleSignIn={() => console.log('Google Sign In')}
+          onGoogleSignIn={handleGoogleSignIn}
+          isSigningIn={isSigningIn}
         />
-        <Download onGoogleSignIn={() => console.log('Google Sign In')} />
+        <Download onGoogleSignIn={handleGoogleSignIn} />
       </div>
     );
   }
@@ -226,7 +203,8 @@ function App() {
       <Header
         currentTab={currentTab}
         onTabChange={setCurrentTab}
-        onGoogleSignIn={() => console.log('Google Sign In')}
+        onGoogleSignIn={handleGoogleSignIn}
+        isSigningIn={isSigningIn}
       />
 
       {/* Main Content */}

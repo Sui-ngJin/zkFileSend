@@ -5,13 +5,17 @@ import collapseIcon from '../assets/collapse-button.svg';
 import expandIcon from '../assets/expand-button.svg';
 import toggleButtonIcon from '../assets/toggle-button.svg';
 import pushButtonIcon from '../assets/push-button.svg';
+import googleIcon from '../assets/google.svg';
+import spinnerIcon from '../assets/spinner-10.svg';
 
 interface HeaderProps {
   currentTab: 'send' | 'download';
   onTabChange: (tab: 'send' | 'download') => void;
+  onGoogleSignIn?: () => void;
+  isSigningIn?: boolean;
 }
 
-const Header: FunctionComponent<HeaderProps> = ({ currentTab, onTabChange }) => {
+const Header: FunctionComponent<HeaderProps> = ({ currentTab, onTabChange, onGoogleSignIn, isSigningIn = false }) => {
   const currentAccount = useCurrentAccount();
   const { mutate: disconnect } = useDisconnectWallet();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -40,7 +44,16 @@ const Header: FunctionComponent<HeaderProps> = ({ currentTab, onTabChange }) => 
         </div>
       </div>
       <div className={styles.signInWrapper}>
-        {currentAccount ? (
+        {currentTab === 'download' ? (
+          <button className={styles.googleSignInButton} onClick={onGoogleSignIn} disabled={isSigningIn}>
+            {isSigningIn ? (
+              <img src={spinnerIcon} alt="Loading" className={styles.spinnerIcon} />
+            ) : (
+              <img src={googleIcon} alt="Google" className={styles.googleIcon} />
+            )}
+            {'Sign in with Google'}
+          </button>
+        ) : currentAccount ? (
           <div className={styles.connectedWalletContainer}>
             <div className={styles.connectedWallet} onClick={toggleDropdown}>
               <div className={styles.address}>{formatAddress(currentAccount.address)}</div>
